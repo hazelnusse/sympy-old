@@ -82,7 +82,7 @@ class sin(Function):
                 return S.ImaginaryUnit * C.sinh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
-
+                print 'pi_coeff', pi_coeff
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
@@ -126,7 +126,9 @@ class sin(Function):
                 if arg.is_Mul and arg.args[0].is_negative:
                     return -cls(-arg)
                 if arg.is_Add:
+                    print 'is Add'
                     x, m = arg.as_independent(S.Pi)
+                    print 'x', x, 'm', m
                     if m in [S.Pi/2, S.Pi]:
                         return sin(m)*cos(x)+cos(m)*sin(x)
                     # normalize sin(-x-y) to -sin(x+y)

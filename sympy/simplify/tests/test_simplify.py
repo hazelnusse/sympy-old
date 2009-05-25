@@ -78,6 +78,49 @@ def test_trigsimp3():
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
+def test_newtrigsimp():
+    # Check induced formula from Table 1 and Table 2 of Fu et al.
+    x,y = symbols('xy')
+    from sympy import oo
+    assert sin(-x) == -sin(x)
+    assert cos(-x) == cos(x)
+    assert tan(-x) == -tan(x)
+    assert cot(-x) == -cot(x)
+    assert sin(pi - x) == sin(x)
+    assert cos(pi - x) == -cos(x)
+    assert tan(pi - x) == -tan(x)
+    assert cot(pi - x) == -cot(x)
+    assert sin(pi + x) == -sin(x)
+    assert cos(pi + x) == -cos(x)
+    assert tan(pi + x) == tan(x)
+    assert cot(pi + x) == cot(x)
+    assert sin(2*pi - x) == -sin(x)
+    assert cos(2*pi - x) == cos(x)
+    assert tan(2*pi - x) == -tan(x)
+    assert cot(2*pi - x) == -cot(x)
+    assert sin(2*pi + x) == sin(x)
+    assert cos(2*pi + x) == cos(x)
+    assert tan(2*pi + x) == tan(x)
+    assert cot(2*pi + x) == cot(x)
+
+    assert sin(0) == 0
+    assert sin(pi/6) == Rational(1,2)
+    assert sin(pi/4) == sqrt(2)/S(2)
+    assert sin(pi/3) == sqrt(3)/S(2)
+    assert sin(pi/2) == 1
+
+    assert cos(0) == 1
+    assert cos(pi/6) == sqrt(3)/S(2)
+    assert cos(pi/4) == sqrt(2)/S(2)
+    assert cos(pi/3) == Rational(1/2)
+    assert cos(pi/2) == 0
+
+    assert tan(0) == 0
+    assert tan(pi/6) == sqrt(3)/S(3)
+    assert tan(pi/4) == 1
+    assert tan(pi/3) == sqrt(3)
+    assert tan(pi/2) == oo
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to

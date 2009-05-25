@@ -760,6 +760,12 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(log(e), deep=True)
         log(2)
     """
+    a, b = map(Wild, 'ab')
+    rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
+                  'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
+                  'TR5':
+
+    """
     from sympy.core.basic import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     if recursive:
@@ -792,7 +798,7 @@ def trigsimp(expr, deep=False, recursive=False):
             break
 
     return result
-
+    """
 
 def trigsimp_nonrecursive(expr, deep=False):
     """
