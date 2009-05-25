@@ -760,10 +760,32 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(log(e), deep=True)
         log(2)
     """
+    # Implement the rule based algorithm presented in:
+    # Automated and readable simplification of trigonometric expressions
+    # by Hongguang Fu, Xiuqin Zhong, Zhenbing Zeng
+    # Mathematical and Computer Modelling 44 (2006), 1169-1177
+
     a, b = map(Wild, 'ab')
+
+    # A dictionary of rules.  Keys are 'TR1' - 'TR13', values are each a tuple
+    # of length 2 tuples, the first entry being the on the left hand side of a
+    # trig identity, the second entry being on the right hand side of the same
+    # trig identity.
     rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
-                  'TR5':
+                  'TR5': ((sin(a)**2, 1 - cos(a)**2)),
+                  'TR6': ((cos(a)**2, 1 - sin(a)**2)),
+                  'TR7': ((cos(a)**2, (1 + cos(2*a))/2)),
+                  'TR8': ((sin(a)*cos(b), (sin(a + b) + sin(a - b))/2),
+                          (cos(a)*sin(b), (sin(a + b) - sin(a - b))/2),
+                          (cos(a)*cos(b), (cos(a + b) + cos(a - b))/2),
+                          (sin(a)*sin(b), -(cos(a + b) - cos(a - b))/2)),
+                  'TR9': ((sin(a) + sin(b), 2*sin((a + b)/2)*cos((a - b)/2)),
+                          (sin(a) - sin(b), 2*cos((a + b)/2)*sin((a - b)/2)),
+                          (cos(a) + cos(b), 2*cos((a + b)/2)*cos((a - b)/2)),
+                          (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2)))
+                  'TR10': 
+
 
     """
     from sympy.core.basic import S
