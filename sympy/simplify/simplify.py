@@ -760,6 +760,7 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(log(e), deep=True)
         log(2)
     """
+    """
     # Implement the rule based algorithm presented in:
     # Automated and readable simplification of trigonometric expressions
     # by Hongguang Fu, Xiuqin Zhong, Zhenbing Zeng
@@ -784,10 +785,18 @@ def trigsimp(expr, deep=False, recursive=False):
                           (sin(a) - sin(b), 2*cos((a + b)/2)*sin((a - b)/2)),
                           (cos(a) + cos(b), 2*cos((a + b)/2)*cos((a - b)/2)),
                           (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2)))
-                  'TR10': 
-
-
+                  'TR10': ((sin(a + b), sin(a)*cos(b) + cos(a)*sin(b)),
+                           (sin(a - b), sin(a)*cos(b) - cos(a)*sin(b)),
+                           (cos(a + b), cos(a)*cos(b) - sin(a)*sin(b)),
+                           (cos(a - b), cos(a)*cos(b) + sin(a)*sin(b)))
+                  'TR11': ((sin(2*a), 2*sin(a)*cos(a)),
+                           (cos(2*a), cos(a)**2 - sin(a)**2))
+                  'TR12': ((tan(a + b), (tan(a) + tan(b))/(1 - tan(a)*tan(b))),
+                           (tan(a - b), (tan(a) - tan(b))/(1 + tan(a)*tan(b))))
+                  'TR13': ((tan(a)*tan(b), 1 - (tan(a) + tan(b))*cot(a + b)),
+                           (cot(a)*cot(b), 1 + (cot(a) + cot(b))*cot(a + b)))}
     """
+
     from sympy.core.basic import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     if recursive:
@@ -820,7 +829,6 @@ def trigsimp(expr, deep=False, recursive=False):
             break
 
     return result
-    """
 
 def trigsimp_nonrecursive(expr, deep=False):
     """

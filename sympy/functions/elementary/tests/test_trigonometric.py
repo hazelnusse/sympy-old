@@ -89,6 +89,24 @@ def test_sin():
 
     assert sin(exp(10)-1) == sin(-1+exp(10))
 
+    assert sin(0*pi/S(2) - x) == -sin(x)
+    assert sin(1*pi/S(2) - x) == cos(x)
+    assert sin(2*pi/S(2) - x) == sin(x)
+    assert sin(3*pi/S(2) - x) == -cos(x)
+    assert sin(4*pi/S(2) - x) == -sin(x)
+    assert sin(5*pi/S(2) - x) == cos(x)
+    assert sin(6*pi/S(2) - x) == sin(x)
+    assert sin(7*pi/S(2) - x) == -cos(x)
+    assert sin(0*pi/S(2) + x) == sin(x)
+    assert sin(1*pi/S(2) + x) == cos(x)
+    assert sin(2*pi/S(2) + x) == -sin(x)
+    assert sin(3*pi/S(2) + x) == -cos(x)
+    assert sin(4*pi/S(2) + x) == sin(x)
+    assert sin(5*pi/S(2) + x) == cos(x)
+    assert sin(6*pi/S(2) + x) == -sin(x)
+    assert sin(7*pi/S(2) + x) == -cos(x)
+
+
 def test_cos():
     x, y = symbols('xy')
 

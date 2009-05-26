@@ -1,9 +1,9 @@
-
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
+from sympy.core.symbol import Wild
 from miscellaneous import sqrt
 from sympy.core.cache import cacheit
-
+from sympy import pi
 from sympy.utilities.decorator import deprecated
 
 ###############################################################################
@@ -76,13 +76,30 @@ class sin(Function):
             elif arg.is_negative:
                 return -cls(-arg)
         else:
+            ###  added to get behavior of Table 1 and 2 in Hu et al.
+            if len(arg.args) == 2 and arg.is_Add:
+                a = Wild('a', exclude=[pi])
+                b = Wild('b')
+                di = arg.match(a*pi + b)
+                if di is not None:
+                    if di[a].is_integer:
+                        if di[a].is_even:
+                            return sin(di[b])
+                        else:
+                            return -sin(di[b])
+                    elif di[a].is_rational:
+                        if di[a].q == 2:
+                            if ((di[a].p - 1)/S(2)).is_odd:
+                                return -cos(di[b])
+                            else:
+                                return cos(di[b])
+            ###
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
                 return S.ImaginaryUnit * C.sinh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
-                print 'pi_coeff', pi_coeff
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
@@ -126,9 +143,7 @@ class sin(Function):
                 if arg.is_Mul and arg.args[0].is_negative:
                     return -cls(-arg)
                 if arg.is_Add:
-                    print 'is Add'
                     x, m = arg.as_independent(S.Pi)
-                    print 'x', x, 'm', m
                     if m in [S.Pi/2, S.Pi]:
                         return sin(m)*cos(x)+cos(m)*sin(x)
                     # normalize sin(-x-y) to -sin(x+y)
