@@ -320,6 +320,24 @@ class cos(Function):
             elif arg.is_negative:
                 return cls(-arg)
         else:
+            ###  added to get behavior of Table 1 and 2 in Hu et al.
+            if len(arg.args) == 2 and arg.is_Add:
+                a = Wild('a', exclude=[pi])
+                b = Wild('b')
+                di = arg.match(a*pi + b)
+                if di is not None:
+                    if di[a].is_integer:
+                        if di[a].is_even:
+                            return cos(di[b])
+                        else:
+                            return -cos(di[b])
+                    elif di[a].is_rational:
+                        if di[a].q == 2:
+                            if ((di[a].p - 1)/S(2)).is_odd:
+                                return sin(di[b])
+                            else:
+                                return -sin(di[b])
+            ###
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
