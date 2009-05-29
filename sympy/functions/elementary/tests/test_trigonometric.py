@@ -105,6 +105,22 @@ def test_sin():
     assert sin(5*pi/S(2) + x) == cos(x)
     assert sin(6*pi/S(2) + x) == -sin(x)
     assert sin(7*pi/S(2) + x) == -cos(x)
+    assert sin(0*pi/S(2) - x + 2) == sin(2 - x)
+    assert sin(1*pi/S(2) - x + 2) == cos(x - 2)
+    assert sin(2*pi/S(2) - x + 2) == sin(x - 2)
+    assert sin(3*pi/S(2) - x + 2) == -cos(x - 2)
+    assert sin(4*pi/S(2) - x + 2) == sin(-x + 2)
+    assert sin(5*pi/S(2) - x + 2) == cos(-x + 2)
+    assert sin(6*pi/S(2) - x + 2) == sin(x - 2)
+    assert sin(7*pi/S(2) - x + 2) == -cos(2 - x)
+    assert sin(0*pi/S(2) + x + 2) == sin(x + 2)
+    assert sin(1*pi/S(2) + x + 2) == cos(x + 2)
+    assert sin(2*pi/S(2) + x + 2) == -sin(x + 2)
+    assert sin(3*pi/S(2) + x + 2) == -cos(x + 2)
+    assert sin(4*pi/S(2) + x + 2) == sin(x + 2)
+    assert sin(5*pi/S(2) + x + 2) == cos(x + 2)
+    assert sin(6*pi/S(2) + x + 2) == -sin(x + 2)
+    assert sin(7*pi/S(2) + x + 2) == -cos(x + 2)
 
 
 def test_cos():
