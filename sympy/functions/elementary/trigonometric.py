@@ -125,27 +125,23 @@ class sin(Function):
                 if arg.is_Mul and arg.args[0].is_negative:
                     return -cls(-arg)
                 if arg.is_Add:
-                    ###  added to get behavior of Table 1 and 2 in Hu et al.
-                    a = Wild('a', exclude=[pi])
-                    b = Wild('b')
-                    di = arg.match(a*pi + b)
-                    if di is not None:
-                        if di[a].is_integer:
-                            if di[a].is_even:
-                                return cls(di[b])
-                            else:
-                                return -cls(di[b])
-                        elif di[a].is_rational:
-                            if di[a].q == 2:
-                                if ((di[a].p - 1)/S(2)).is_odd:
-                                    return -cos(di[b])
-                                else:
-                                    return cos(di[b])
-                    ###  end what was added to get behavior of Table 1 and 2
-
                     x, m = arg.as_independent(S.Pi)
-                    if m in [S.Pi/2, S.Pi]:
-                        return sin(m)*cos(x)+cos(m)*sin(x)
+                    # This takes care of phase shifts by k*pi/2
+                    # Gives the behavior of Table 1 from Hu et al.
+                    if m:
+                        pi_coef = m/pi
+                        if pi_coef.is_integer:
+                            if pi_coef.is_even:
+                                return cls(x)
+                            else:
+                                return -cls(x)
+                        elif pi_coef.is_rational:
+                            if pi_coef.q == 2:
+                                if ((pi_coef.p - 1)/S(2)).is_odd:
+                                    return -cos(x)
+                                else:
+                                    return cos(x)
+
                     # normalize sin(-x-y) to -sin(x+y)
                     if arg.args[0].is_Mul:
                         if arg.args[0].args[0].is_negative:
@@ -319,25 +315,9 @@ class cos(Function):
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
+            elif arg == pi/2:
+                return S.Zero
         else:
-            ###  added to get behavior of Table 1 and 2 in Hu et al.
-            if arg.is_Add:
-                a = Wild('a', exclude=[pi])
-                b = Wild('b')
-                di = arg.match(a*pi + b)
-                if di is not None:
-                    if di[a].is_integer:
-                        if di[a].is_even:
-                            return cos(di[b])
-                        else:
-                            return -cos(di[b])
-                    elif di[a].is_rational:
-                        if di[a].q == 2:
-                            if ((di[a].p - 1)/S(2)).is_odd:
-                                return sin(di[b])
-                            else:
-                                return -sin(di[b])
-            ###
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
@@ -387,9 +367,46 @@ class cos(Function):
                 if arg.is_Mul and arg.args[0].is_negative:
                     return cls(-arg)
                 if arg.is_Add:
+                ###  added to get behavior of Table 1 and 2 in Hu et al.
+                #    a = Wild('a', exclude=[pi])
+                #    b = Wild('b')
+                #    di = arg.match(a*pi + b)
+                #    if di is not None:
+                #        if di[a].is_integer:
+                #            if di[a].is_even:
+                #                return cls(di[b])
+                #            else:
+                #                return -cls(di[b])
+                #        elif di[a].is_rational:
+                #            if di[a].q == 2:
+                #                if ((di[a].p - 1)/S(2)).is_odd:
+                #                    return sin(di[b])
+                #                else:
+                #                    return -sin(di[b])
+                ###
                     x, m = arg.as_independent(S.Pi)
-                    if m in [S.Pi/2, S.Pi]:
-                        return cos(m)*cos(x)-sin(m)*sin(x)
+                    if m:
+                        pi_coef = m/pi
+                        if pi_coef.is_integer:
+                            if pi_coef.is_even:
+                                return cls(x)
+                            else:
+                                return -cls(x)
+                        elif pi_coef.is_rational:
+                            if pi_coef.q == 2:
+                                if ((pi_coef.p - 1)/S(2)).is_odd:
+                                    return sin(x)
+                                else:
+                                    return -sin(x)
+                    """i = 0
+                    for additive_term in arg.args:
+                        if additive_term.is_Mul:
+                            if additive_term.args[0].is_negative:
+                                i += 1
+                        elif additive_term.is_negative:
+                            i += 1
+                    """
+
                     # normalize cos(-x-y) to cos(x+y)
                     if arg.args[0].is_Mul:
                         if arg.args[0].args[0].is_negative:
