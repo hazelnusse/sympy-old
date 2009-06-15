@@ -210,8 +210,7 @@ def test_cos():
     assert cos(r).is_real == True
 
     assert cos(exp(10)-1) == cos(-1+exp(10))
-    from sympy import Function
-    x = Function('x')
+
     assert cos(0*pi/S(2) - x) == cos(x)
     assert cos(1*pi/S(2) - x) == sin(x)
     assert cos(2*pi/S(2) - x) == -cos(x)
@@ -315,6 +314,39 @@ def test_tan():
     assert tan(k*pi*I) == tanh(k*pi)*I
 
     assert tan(r).is_real == True
+
+    assert tan(0*pi/S(2) - x) == -tan(x)
+    assert tan(1*pi/S(2) - x) == cot(x)
+    assert tan(2*pi/S(2) - x) == -tan(x)
+    assert tan(3*pi/S(2) - x) == cot(x)
+    assert tan(4*pi/S(2) - x) == -tan(x)
+    assert tan(5*pi/S(2) - x) == cot(x)
+    assert tan(6*pi/S(2) - x) == -tan(x)
+    assert tan(7*pi/S(2) - x) == cot(x)
+    assert tan(0*pi/S(2) + x) == tan(x)
+    assert tan(1*pi/S(2) + x) == -cot(x)
+    assert tan(2*pi/S(2) + x) == tan(x)
+    assert tan(3*pi/S(2) + x) == -cot(x)
+    assert tan(4*pi/S(2) + x) == tan(x)
+    assert tan(5*pi/S(2) + x) == -cot(x)
+    assert tan(6*pi/S(2) + x) == tan(x)
+    assert tan(7*pi/S(2) + x) == -cot(x)
+    assert tan(0*pi/S(2) - x + 2) == tan(2 - x)
+    assert tan(1*pi/S(2) - x + 2) == -cot(2 - x)
+    assert tan(2*pi/S(2) - x + 2) == tan(2 - x)
+    assert tan(3*pi/S(2) - x + 2) == -cot(2 - x)
+    assert tan(4*pi/S(2) - x + 2) == tan(2 - x)
+    assert tan(5*pi/S(2) - x + 2) == -cot(2 - x)
+    assert tan(6*pi/S(2) - x + 2) == tan(2 - x)
+    assert tan(7*pi/S(2) - x + 2) == -cot(2 - x)
+    assert tan(0*pi/S(2) + x + 2) == tan(x + 2)
+    assert tan(1*pi/S(2) + x + 2) == -cot(x + 2)
+    assert tan(2*pi/S(2) + x + 2) == tan(x + 2)
+    assert tan(3*pi/S(2) + x + 2) == -cot(x + 2)
+    assert tan(4*pi/S(2) + x + 2) == tan(x + 2)
+    assert tan(5*pi/S(2) + x + 2) == -cot(x + 2)
+    assert tan(6*pi/S(2) + x + 2) == tan(x + 2)
+    assert tan(7*pi/S(2) + x + 2) == -cot(x + 2)
 
 def test_cot():
     x, y = symbols('xy')
