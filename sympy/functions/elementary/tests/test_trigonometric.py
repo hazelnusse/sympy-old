@@ -418,6 +418,40 @@ def test_cot():
 
     assert cot(r).is_real == True
 
+    assert cot(0*pi/S(2) - x) == -cot(x)
+    assert cot(1*pi/S(2) - x) == tan(x)
+    assert cot(2*pi/S(2) - x) == -cot(x)
+    assert cot(3*pi/S(2) - x) == tan(x)
+    assert cot(4*pi/S(2) - x) == -cot(x)
+    assert cot(5*pi/S(2) - x) == tan(x)
+    assert cot(6*pi/S(2) - x) == -cot(x)
+    assert cot(7*pi/S(2) - x) == tan(x)
+    assert cot(0*pi/S(2) + x) == cot(x)
+    assert cot(1*pi/S(2) + x) == -tan(x)
+    assert cot(2*pi/S(2) + x) == cot(x)
+    assert cot(3*pi/S(2) + x) == -tan(x)
+    assert cot(4*pi/S(2) + x) == cot(x)
+    assert cot(5*pi/S(2) + x) == -tan(x)
+    assert cot(6*pi/S(2) + x) == cot(x)
+    assert cot(7*pi/S(2) + x) == -tan(x)
+    assert cot(0*pi/S(2) - x + 2) == cot(2 - x)
+    assert cot(1*pi/S(2) - x + 2) == -tan(2 - x)
+    assert cot(2*pi/S(2) - x + 2) == cot(2 - x)
+    assert cot(3*pi/S(2) - x + 2) == -tan(2 - x)
+    assert cot(4*pi/S(2) - x + 2) == cot(2 - x)
+    assert cot(5*pi/S(2) - x + 2) == -tan(2 - x)
+    assert cot(6*pi/S(2) - x + 2) == cot(2 - x)
+    assert cot(7*pi/S(2) - x + 2) == -tan(2 - x)
+    """
+    assert cot(0*pi/S(2) + x + 2) == tan(x + 2)
+    assert cot(1*pi/S(2) + x + 2) == -cot(x + 2)
+    assert cot(2*pi/S(2) + x + 2) == tan(x + 2)
+    assert cot(3*pi/S(2) + x + 2) == -cot(x + 2)
+    assert cot(4*pi/S(2) + x + 2) == tan(x + 2)
+    assert cot(5*pi/S(2) + x + 2) == -cot(x + 2)
+    assert cot(6*pi/S(2) + x + 2) == tan(x + 2)
+    assert cot(7*pi/S(2) + x + 2) == -cot(x + 2)
+    """
 # TODO write me
 def test_asin():
     x = Symbol('x')

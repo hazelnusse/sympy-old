@@ -755,6 +755,20 @@ class cot(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
+            if arg.is_Mul and arg.args[0].is_negative:
+                return -cls(-arg)
+            if arg.is_Add:
+                x, m = arg.as_independent(S.Pi)
+                # This takes care of phase shifts by k*pi/2
+                # Gives the behavior of Table 1 from Hu et al.
+                if m:
+                    pi_coef = m/pi
+                    if pi_coef.is_integer:
+                        return cls(x)
+                    elif pi_coef.is_rational:
+                        if pi_coef.q == 2:
+                            return -tan(x)
+
         if isinstance(arg, acot):
             return arg.args[0]
 
