@@ -122,6 +122,8 @@ def test_sin():
     assert sin(6*pi/S(2) + x + 2) == -sin(x + 2)
     assert sin(7*pi/S(2) + x + 2) == -cos(x + 2)
 
+    assert sin(x + y).expand(trig=True) == sin(x)*cos(y) + cos(x)*sin(y)
+    assert sin(x - y).expand(trig=True) == sin(x)*cos(y) - cos(x)*sin(y)
 
 def test_cos():
     x, y = symbols('xy')
@@ -244,6 +246,8 @@ def test_cos():
     assert cos(6*pi/S(2) + x + 2) == -cos(x + 2)
     assert cos(7*pi/S(2) + x + 2) == sin(x + 2)
 
+    assert cos(x + y).expand(trig=True) == cos(x)*cos(y) - sin(x)*sin(y)
+    assert cos(x - y).expand(trig=True) == cos(x)*cos(y) + sin(x)*sin(y)
 
 def test_tan():
     x, y = symbols('xy')
@@ -348,6 +352,11 @@ def test_tan():
     assert tan(6*pi/S(2) + x + 2) == tan(x + 2)
     assert tan(7*pi/S(2) + x + 2) == -cot(x + 2)
 
+    assert tan(x + y).expand(trig=True) == tan(x)/(1 - tan(x)*tan(y)) + \
+        tan(y)/(1 - tan(x)*tan(y))
+    assert tan(x - y).expand(trig=True) == tan(x)/(1 + tan(x)*tan(y)) - \
+        tan(y)/(1 + tan(x)*tan(y))
+
 def test_cot():
     x, y = symbols('xy')
 
@@ -442,16 +451,21 @@ def test_cot():
     assert cot(5*pi/S(2) - x + 2) == -tan(2 - x)
     assert cot(6*pi/S(2) - x + 2) == cot(2 - x)
     assert cot(7*pi/S(2) - x + 2) == -tan(2 - x)
-    """
-    assert cot(0*pi/S(2) + x + 2) == tan(x + 2)
-    assert cot(1*pi/S(2) + x + 2) == -cot(x + 2)
-    assert cot(2*pi/S(2) + x + 2) == tan(x + 2)
-    assert cot(3*pi/S(2) + x + 2) == -cot(x + 2)
-    assert cot(4*pi/S(2) + x + 2) == tan(x + 2)
-    assert cot(5*pi/S(2) + x + 2) == -cot(x + 2)
-    assert cot(6*pi/S(2) + x + 2) == tan(x + 2)
-    assert cot(7*pi/S(2) + x + 2) == -cot(x + 2)
-    """
+    assert cot(0*pi/S(2) + x + 2) == cot(x + 2)
+    assert cot(1*pi/S(2) + x + 2) == -tan(x + 2)
+    assert cot(2*pi/S(2) + x + 2) == cot(x + 2)
+    assert cot(3*pi/S(2) + x + 2) == -tan(x + 2)
+    assert cot(4*pi/S(2) + x + 2) == cot(x + 2)
+    assert cot(5*pi/S(2) + x + 2) == -tan(x + 2)
+    assert cot(6*pi/S(2) + x + 2) == cot(x + 2)
+    assert cot(7*pi/S(2) + x + 2) == -tan(x + 2)
+
+    assert (cot(x + y).expand(trig=True) == 1/(tan(x) + tan(y)) -
+            tan(x)*tan(y)/(tan(x) + tan(y)))
+    assert (cot(x - y).expand(trig=True) == 1/(tan(x) - tan(y)) +
+            tan(x)*tan(y)/(tan(x) - tan(y)))
+
+
 # TODO write me
 def test_asin():
     x = Symbol('x')

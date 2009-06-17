@@ -648,7 +648,19 @@ class tan(Function):
             S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
 
     def _eval_expand_trig(self, *args):
-        return self
+        arg = self.args[0].expand()
+        x = None
+        if arg.is_Add:
+            x = arg.args[0]
+            y = C.Add(*arg.args[1:])
+        else:
+            coeff, terms = arg.as_coeff_terms()
+            if not (coeff is S.One) and coeff.is_Integer and terms:
+                x = C.Mul(*terms)
+                y = (coeff-1)*x
+        if x is not None:
+            return ((tan(x)+tan(y))/(1 - tan(x)*tan(y))).expand(trig=True)
+        return tan(arg)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -656,10 +668,10 @@ class tan(Function):
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
     def _eval_rewrite_as_sin(self, arg):
-        return 2*sin(x)**2/sin(2*x)
+        return 2*sin(arg)**2/sin(2*arg)
 
     def _eval_rewrite_as_cos(self, arg):
-        return -cos(x + S.Pi/2)/cos(x)
+        return -cos(x + S.Pi/2)/cos(arg)
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/S.Cot(arg)
@@ -811,6 +823,21 @@ class cot(Function):
         denom = sin(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re) - \
             S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
+
+    def _eval_expand_trig(self, *args):
+        arg = self.args[0].expand()
+        x = None
+        if arg.is_Add:
+            x = arg.args[0]
+            y = C.Add(*arg.args[1:])
+        else:
+            coeff, terms = arg.as_coeff_terms()
+            if not (coeff is S.One) and coeff.is_Integer and terms:
+                x = C.Mul(*terms)
+                y = (coeff-1)*x
+        if x is not None:
+            return ((1 - tan(x)*tan(y))/(tan(x)+tan(y))).expand(trig=True)
+        return cot(arg)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
