@@ -54,9 +54,6 @@ class sin(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        return asin
-
     @classmethod
     def _eval_apply_subs(self, *args):
         return
@@ -296,9 +293,6 @@ class cos(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        return acos
-
     @classmethod
     def _eval_apply_subs(self, *args):
         return
@@ -530,12 +524,9 @@ class tan(Function):
 
     def fdiff(self, argindex=1):
         if argindex==1:
-            return S.One + self**2
+            return sec(self.args[0])**2 
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return atan
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -697,6 +688,174 @@ class tan(Function):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
 
+class csc(Function):
+    """
+    Usage
+    =====
+      csc(x) -> Returns the cosecant of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -csc(self.args[0])*cot(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    @deprecated
+    def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Zero:
+                return S.ComplexInfinity
+            elif arg.is_negative:
+                return -cls(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return -S.ImaginaryUnit * C.coth(i_coeff)
+            else:
+                pi_coeff = arg.as_coefficient(S.Pi)
+
+                if pi_coeff is not None:
+                    #if pi_coeff.is_integer:
+                    #    return S.ComplexInfinity
+                    if pi_coeff.is_Rational:
+                        cst_table = {
+                            2 : S.Zero,
+                            3 : 1 / sqrt(3),
+                            4 : S.One,
+                            6 : sqrt(3)
+                        }
+
+                        try:
+                            result = cst_table[pi_coeff.q]
+
+                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
+                                return -result
+                            else:
+                                return result
+                        except KeyError:
+                            pass
+
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+            if arg.is_Mul and arg.args[0].is_negative:
+                return -cls(-arg)
+            if arg.is_Add:
+                x, m = arg.as_independent(S.Pi)
+                # This takes care of phase shifts by k*pi/2
+                # Gives the behavior of Table 1 from Hu et al.
+                if m:
+                    pi_coef = m/pi
+                    if pi_coef.is_integer:
+                        return cls(x)
+                    elif pi_coef.is_rational:
+                        if pi_coef.q == 2:
+                            return -tan(x)
+
+        if isinstance(arg, acot):
+            return arg.args[0]
+
+        if isinstance(arg, atan):
+            x = arg.args[0]
+            return 1 / x
+
+        if isinstance(arg, asin):
+            x = arg.args[0]
+            return sqrt(1 - x**2) / x
+
+        if isinstance(arg, acos):
+            x = arg.args[0]
+            return x / sqrt(1 - x**2)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return 1 / sympify(x)
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            B = S.Bernoulli(n+1)
+            F = C.Factorial(n+1)
+
+            return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
+
+    def _eval_conjugate(self):
+        assert len(self.args) == 1
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self, *args):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        denom = sin(re)**2 + C.sinh(im)**2
+        return (sin(re)*cos(re) - \
+            S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
+
+    def _eval_expand_trig(self, *args):
+        arg = self.args[0].expand()
+        x = None
+        if arg.is_Add:
+            x = arg.args[0]
+            y = C.Add(*arg.args[1:])
+        else:
+            coeff, terms = arg.as_coeff_terms()
+            if not (coeff is S.One) and coeff.is_Integer and terms:
+                x = C.Mul(*terms)
+                y = (coeff-1)*x
+        if x is not None:
+            return ((1 - tan(x)*tan(y))/(tan(x)+tan(y))).expand(trig=True)
+        return cot(arg)
+
+    def _eval_rewrite_as_exp(self, arg):
+        exp, I = C.exp, S.ImaginaryUnit
+        neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
+        return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
+
+    def _eval_rewrite_as_sin(self, arg):
+        return 2*sin(2*x)/sin(x)**2
+
+    def _eval_rewrite_as_cos(self, arg):
+        return -cos(x)/cos(x + S.Pi/2)
+
+    def _eval_rewrite_as_tan(self, arg):
+        return 1/tan(arg)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return S.One
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cot(self.args[0]._sage_())
+
 class cot(Function):
     """
     Usage
@@ -711,9 +870,6 @@ class cot(Function):
             return -S.One - S.Cot**2
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return S.ACot
 
     @classmethod
     def _eval_apply_subs(self, *args):
