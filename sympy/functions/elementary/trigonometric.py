@@ -512,7 +512,7 @@ class tan(Function):
 
     See also
     ========
-       L{sin}, L{tan}
+       L{sin}, L{cos}
 
        External links
        --------------
@@ -524,7 +524,7 @@ class tan(Function):
 
     def fdiff(self, argindex=1):
         if argindex==1:
-            return sec(self.args[0])**2 
+            return sec(self.args[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -539,7 +539,7 @@ class tan(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg.is_Number:
+        if arg.is_number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -548,6 +548,8 @@ class tan(Function):
                 return -cls(-arg)
             elif arg == pi/2:
                 return S.ComplexInfinity
+            elif arg == pi:
+                return 0
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
