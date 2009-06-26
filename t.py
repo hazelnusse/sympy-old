@@ -205,6 +205,18 @@ def test_sin():
     assert sin(pi/3 + 2*pi) == sqrt(3)/2
     assert sin(pi/2 + 2*pi) == 1
 
+    assert sin(-y + 4*pi) == -sin(y)
+    assert sin(pi - y + 4*pi) == sin(y)
+    assert sin(pi + y + 4*pi) == -sin(y)
+    assert sin(2*pi - y + 4*pi) == -sin(y)
+    assert sin(pi/2 + y + 4*pi) == cos(y)
+    assert sin(pi/2 - y + 4*pi) == cos(y)
+    assert sin(0 + 4*pi) == 0
+    assert sin(pi/6 + 4*pi) == S(1)/2
+    assert sin(pi/4 + 4*pi) == 1/sqrt(2)
+    assert sin(pi/3 + 4*pi) == sqrt(3)/2
+    assert sin(pi/2 + 4*pi) == 1
+
 def test_cos():
     assert cos(-y) == cos(y)
     assert cos(pi - y) == -cos(y)
