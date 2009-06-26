@@ -1,5 +1,5 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
-        var, Wild)
+        var, Wild, symbols)
 
 def sec(a):
     pass
@@ -184,6 +184,7 @@ def test_get_pi_shift():
     assert get_pi_shift(y+n*pi) == (y, 12*n)
     assert get_pi_shift(pi/2) == (0, 6)
     assert get_pi_shift(y) == (y, 0)
+    assert get_pi_shift(x + y) == (x+y, 0)
 
 def test_sin():
     assert sin(-y) == -sin(y)
