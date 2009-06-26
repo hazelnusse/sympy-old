@@ -34,11 +34,14 @@ class TrigFunction(Basic):
             if x == 0:
                 # if x == 0, it means we can immediatelly simplify
                 return cls.eval_direct(m)
+            # Full-period symmetry
             if not m % (12*cls.period):
                 return cls(x, eval=False)
             else:
+                # Half-period symmetry
                 if not m % 12:
                     return -cls(x, eval=False)
+                # Quarter-period symmetry
                 elif not m % 6:
                     f = conjugates[cls]
                     sign = (-1)**((((m-6)//12) % cls.period) + f.odd)
