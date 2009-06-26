@@ -141,54 +141,54 @@ def test_get_pi_shift():
     assert get_pi_shift(pi/2) == (0, 6)
     assert get_pi_shift(y) == (y, 0)
 
-def test_Sin():
-    assert Sin(-y) == -Sin(y)
-    assert Sin(pi - y) == Sin(y)
-    assert Sin(pi + y) == -Sin(y)
-    assert Sin(2*pi - y) == -Sin(y)
-    assert Sin(pi/2 + y) == Cos(y)
-    assert Sin(pi/2 - y) == Cos(y)
-    assert Sin(0) == 0
-    assert Sin(pi/6) == S(1)/2
-    assert Sin(pi/4) == 1/sqrt(2)
-    assert Sin(pi/3) == sqrt(3)/2
-    assert Sin(pi/2) == 1
+def test_sin():
+    assert sin(-y) == -Sin(y)
+    assert sin(pi - y) == Sin(y)
+    assert sin(pi + y) == -Sin(y)
+    assert sin(2*pi - y) == -Sin(y)
+    assert sin(pi/2 + y) == cos(y)
+    assert sin(pi/2 - y) == cos(y)
+    assert sin(0) == 0
+    assert sin(pi/6) == S(1)/2
+    assert sin(pi/4) == 1/sqrt(2)
+    assert sin(pi/3) == sqrt(3)/2
+    assert sin(pi/2) == 1
 
-def test_Cos():
-    assert Cos(-y) == Cos(y)
-    assert Cos(pi - y) == -Cos(y)
-    assert Cos(pi + y) == -Cos(y)
-    assert Cos(2*pi - y) == Cos(y)
-    assert Cos(pi/2 + y) == -Sin(y)
-    assert Cos(pi/2 - y) == Sin(y)
-    assert Cos(0) == 1
-    assert Cos(pi/6) == sqrt(3)/2
-    assert Cos(pi/4) == 1/sqrt(2)
-    assert Cos(pi/3) == 1/S(2)
-    assert Cos(pi/2) == 0
+def test_cos():
+    assert cos(-y) == Cos(y)
+    assert cos(pi - y) == -Cos(y)
+    assert cos(pi + y) == -Cos(y)
+    assert cos(2*pi - y) == Cos(y)
+    assert cos(pi/2 + y) == -sin(y)
+    assert cos(pi/2 - y) == sin(y)
+    assert cos(0) == 1
+    assert cos(pi/6) == sqrt(3)/2
+    assert cos(pi/4) == 1/sqrt(2)
+    assert cos(pi/3) == 1/S(2)
+    assert cos(pi/2) == 0
 
-def test_Tan():
-    assert Tan(-y) == -Tan(y)
-    assert Tan(pi - y) == -Tan(y)
-    assert Tan(pi + y) == Tan(y)
-    assert Tan(2*pi - y) == -Tan(y)
-    assert Tan(pi/2 + y) == -Cot(y)
-    assert Tan(pi/2 - y) == Cot(y)
-    assert Tan(0) == 0
-    assert Tan(pi/6) == 1/sqrt(3)
-    assert Tan(pi/4) == 1
-    assert Tan(pi/3) == sqrt(3)
-    #assert Tan(pi/2) == oo
+def test_tan():
+    assert tan(-y) == -Tan(y)
+    assert tan(pi - y) == -Tan(y)
+    assert tan(pi + y) == Tan(y)
+    assert tan(2*pi - y) == -Tan(y)
+    assert tan(pi/2 + y) == -cot(y)
+    assert tan(pi/2 - y) == cot(y)
+    assert tan(0) == 0
+    assert tan(pi/6) == 1/sqrt(3)
+    assert tan(pi/4) == 1
+    assert tan(pi/3) == sqrt(3)
+    #assert tan(pi/2) == oo
 
-def test_Cot():
-    assert Cot(-y) == -Cot(y)
-    assert Cot(pi - y) == -Cot(y)
-    assert Cot(pi + y) == Cot(y)
-    assert Cot(2*pi - y) == -Cot(y)
-    assert Cot(pi/2 + y) == -Tan(y)
-    assert Cot(pi/2 - y) == Tan(y)
-    #assert Cot(0) == 0
-    assert Cot(pi/6) == sqrt(3)
-    assert Cot(pi/4) == 1
-    assert Cot(pi/3) == 1/sqrt(3)
-    assert Cot(pi/2) == 0
+def test_cot():
+    assert cot(-y) == -Cot(y)
+    assert cot(pi - y) == -Cot(y)
+    assert cot(pi + y) == Cot(y)
+    assert cot(2*pi - y) == -Cot(y)
+    assert cot(pi/2 + y) == -tan(y)
+    assert cot(pi/2 - y) == tan(y)
+    #assert cot(0) == 0
+    assert cot(pi/6) == sqrt(3)
+    assert cot(pi/4) == 1
+    assert cot(pi/3) == 1/sqrt(3)
+    assert cot(pi/2) == 0
