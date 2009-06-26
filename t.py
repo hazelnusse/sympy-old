@@ -217,6 +217,9 @@ def test_sin():
     assert sin(pi/3 + 4*pi) == sqrt(3)/2
     assert sin(pi/2 + 4*pi) == 1
 
+    assert sin(3*pi/2) == -1
+    assert sin(5*pi/2) == 1
+
 def test_cos():
     assert cos(-y) == cos(y)
     assert cos(pi - y) == -cos(y)
@@ -242,6 +245,14 @@ def test_cos():
     assert cos(pi/3 + 2*pi) == 1/S(2)
     assert cos(pi/2 + 2*pi) == 0
 
+    assert cos(pi) == -1
+    assert cos(8*pi) == 1
+    assert cos(-9*pi) == -1
+    assert cos(3*pi/2) == 0
+    assert cos(11*pi/2) == 0
+    assert cos(pi/12) == (1 + sqrt(3)) / (2 * sqrt(2))
+
+
 def test_tan():
     assert tan(-y) == -tan(y)
     assert tan(pi - y) == -tan(y)
@@ -265,6 +276,8 @@ def test_tan():
     assert tan(pi/6 + pi) == 1/sqrt(3)
     assert tan(pi/4 + pi) == 1
     assert tan(pi/3 + pi) == sqrt(3)
+
+    assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
 
 def test_cot():
     assert cot(-y) == -cot(y)
