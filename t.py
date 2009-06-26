@@ -193,6 +193,18 @@ def test_sin():
     assert sin(pi/3) == sqrt(3)/2
     assert sin(pi/2) == 1
 
+    assert sin(-y + 2*pi) == -sin(y)
+    assert sin(pi - y + 2*pi) == sin(y)
+    assert sin(pi + y + 2*pi) == -sin(y)
+    assert sin(2*pi - y + 2*pi) == -sin(y)
+    assert sin(pi/2 + y + 2*pi) == cos(y)
+    assert sin(pi/2 - y + 2*pi) == cos(y)
+    assert sin(0 + 2*pi) == 0
+    assert sin(pi/6 + 2*pi) == S(1)/2
+    assert sin(pi/4 + 2*pi) == 1/sqrt(2)
+    assert sin(pi/3 + 2*pi) == sqrt(3)/2
+    assert sin(pi/2 + 2*pi) == 1
+
 def test_cos():
     assert cos(-y) == cos(y)
     assert cos(pi - y) == -cos(y)
@@ -205,6 +217,18 @@ def test_cos():
     assert cos(pi/4) == 1/sqrt(2)
     assert cos(pi/3) == 1/S(2)
     assert cos(pi/2) == 0
+
+    assert cos(-y + 2*pi) == cos(y)
+    assert cos(pi - y + 2*pi) == -cos(y)
+    assert cos(pi + y + 2*pi) == -cos(y)
+    assert cos(2*pi - y + 2*pi) == cos(y)
+    assert cos(pi/2 + y + 2*pi) == -sin(y)
+    assert cos(pi/2 - y + 2*pi) == sin(y)
+    assert cos(0 + 2*pi) == 1
+    assert cos(pi/6 + 2*pi) == sqrt(3)/2
+    assert cos(pi/4 + 2*pi) == 1/sqrt(2)
+    assert cos(pi/3 + 2*pi) == 1/S(2)
+    assert cos(pi/2 + 2*pi) == 0
 
 def test_tan():
     assert tan(-y) == -tan(y)
@@ -219,6 +243,17 @@ def test_tan():
     assert tan(pi/3) == sqrt(3)
     #assert tan(pi/2) == oo
 
+    assert tan(-y + pi) == -tan(y)
+    assert tan(pi - y + pi) == -tan(y)
+    assert tan(pi + y + pi) == tan(y)
+    assert tan(2*pi - y + pi) == -tan(y)
+    assert tan(pi/2 + y + pi) == -cot(y)
+    assert tan(pi/2 - y + pi) == cot(y)
+    assert tan(0 + pi) == 0
+    assert tan(pi/6 + pi) == 1/sqrt(3)
+    assert tan(pi/4 + pi) == 1
+    assert tan(pi/3 + pi) == sqrt(3)
+
 def test_cot():
     assert cot(-y) == -cot(y)
     assert cot(pi - y) == -cot(y)
@@ -231,3 +266,14 @@ def test_cot():
     assert cot(pi/4) == 1
     assert cot(pi/3) == 1/sqrt(3)
     assert cot(pi/2) == 0
+
+    assert cot(-y + pi) == -cot(y)
+    assert cot(pi - y + pi) == -cot(y)
+    assert cot(pi + y + pi) == cot(y)
+    assert cot(2*pi - y + pi) == -cot(y)
+    assert cot(pi/2 + y + pi) == -tan(y)
+    assert cot(pi/2 - y + pi) == tan(y)
+    assert cot(pi/6 + pi) == sqrt(3)
+    assert cot(pi/4 + pi) == 1
+    assert cot(pi/3 + pi) == 1/sqrt(3)
+    assert cot(pi/2 + pi) == 0
