@@ -1,6 +1,12 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
         var, Wild)
 
+def sec(a):
+    pass
+
+def csc(a):
+    pass
+
 C0 = (sqrt(3)-1)/(2*sqrt(2))
 C1 = S(1)/2
 C2 = sqrt(2)/2
@@ -124,15 +130,18 @@ def get_pi_shift(arg):
     n = Wild("n", exclude=[pi])
     r = arg.match(x+n*pi/12)
     # I think it should always match:
-    assert r is not None
-    return r[x], r[n]
+    if r is None:
+        return arg, S(0)
+    else:
+        return r[x], r[n]
 
 sin = Sin
 cos = Cos
 tan = Tan
 cot = Cot
 
-rule_dict = { #'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
+var("a b")
+rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
                   'TR5': ((sin(a)**2, 1 - cos(a)**2)),
                   'TR6': ((cos(a)**2, 1 - sin(a)**2)),
@@ -152,8 +161,7 @@ rule_dict = { #'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR11': ((sin(2*a), 2*sin(a)*cos(a)),
                            (cos(2*a), cos(a)**2 - sin(a)**2)),
                   'TR12': ((tan(a + b), (tan(a) + tan(b))/(1 - tan(a)*tan(b))),
-                           (tan(a - b), (tan(a) - tan(b))/(1 +
-                               tan(a)*tan(b)))),
+                           (tan(a - b), (tan(a) - tan(b))/(1 + tan(a)*tan(b)))),
                   'TR13': ((tan(a)*tan(b), 1 - (tan(a) + tan(b))*cot(a + b)),
                            (cot(a)*cot(b), 1 + (cot(a) + cot(b))*cot(a + b)))}
 
