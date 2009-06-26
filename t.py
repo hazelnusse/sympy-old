@@ -40,8 +40,9 @@ class TrigFunction(Basic):
                 if not m % 12:
                     return -cls(x, eval=False)
                 elif not m % 6:
-                    # conjugates + sign
-                    pass
+                    f = conjugates[cls]
+                    sign = (-1)**((((m-6)//12) % cls.period) + f.odd)
+                    return sign * f(x)
 
 class Sin(TrigFunction):
     odd = True
@@ -90,6 +91,14 @@ class Cot(TrigFunction):
         """
         # we use the relation cot(x) = cos(x)/sin(x)
         return Cos.eval_direct(m)/Sin.eval_direct(m)
+
+# pi/2-x symmetry:
+conjugates = {
+    Sin: Cos,
+    Cos: Sin,
+    Tan: Cot,
+    Cot: Tan,
+    }
 
 def get_pi_shift(arg):
     """
