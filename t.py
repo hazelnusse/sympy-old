@@ -1,4 +1,5 @@
-from sympy import Symbol, pi, S, Basic, Function, solve, latex, sqrt
+from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
+        var, Wild)
 
 C0 = (sqrt(3)-1)/(2*sqrt(2))
 C1 = S(1)/2
@@ -16,6 +17,7 @@ sin_table = [
 class TrigFunction(Basic):
 
     def __new__(cls, arg):
+        arg = sympify(arg)
         r = cls.eval(arg)
         if r:
             return r
@@ -24,7 +26,10 @@ class TrigFunction(Basic):
 
     @classmethod
     def eval(cls, arg):
-        pass
+        x, n = get_pi_shift(arg)
+        m = n % (12*cls.period)
+        if x == 0:
+            return cls.eval_direct(m)
 
 class Sin(TrigFunction):
     odd = True
@@ -76,30 +81,24 @@ class Cot(TrigFunction):
 
 def get_pi_shift(arg):
     """
-    If arg = x + n*pi/N, returns (x, n, N), otherwise None.
+    If arg = x + n*pi/12, returns (x, n), otherwise None.
     """
-    if arg.is_Add:
-        x, m = arg.as_independent(S.Pi)
-        if m:
-            pi_coef = m/pi
-            if pi_coef.is_Rational:
-                return x, pi_coef.p, pi_coef.q
-            else:
-                return x, pi_coef, 1
-        else:
-            return x, 0
+    x = Wild("x", exclude=[pi])
+    n = Wild("n", exclude=[pi])
+    r = arg.match(x+n*pi/12)
+    # I think it should always match:
+    assert r is not None
+    return r[x], r[n]
 
-x = Symbol('x')
-n = Symbol('n')
-N = Symbol('N')
-e = x + 2*pi/12
-print get_pi_shift(e)
-print get_pi_shift(x+n*pi)
+var("x n N y")
+print get_pi_shift(x+2*pi/12)
+print get_pi_shift(y+n*pi)
+print get_pi_shift(pi/2)
+print get_pi_shift(y)
 
 print Sin(0)
-print Sin(pi/2)
+print Sin(y+pi/2)
 print Sin(pi)
 print Cos(0)
 print Cos(pi/2)
 print Cos(pi)
-
