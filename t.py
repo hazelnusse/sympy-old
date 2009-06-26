@@ -132,7 +132,7 @@ cos = Cos
 tan = Tan
 cot = Cot
 
-rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
+rule_dict = { #'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
                   'TR5': ((sin(a)**2, 1 - cos(a)**2)),
                   'TR6': ((cos(a)**2, 1 - sin(a)**2)),
@@ -144,19 +144,24 @@ rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR9': ((sin(a) + sin(b), 2*sin((a + b)/2)*cos((a - b)/2)),
                           (sin(a) - sin(b), 2*cos((a + b)/2)*sin((a - b)/2)),
                           (cos(a) + cos(b), 2*cos((a + b)/2)*cos((a - b)/2)),
-                          (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2)))
+                          (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2))),
                   'TR10': ((sin(a + b), sin(a)*cos(b) + cos(a)*sin(b)),
                            (sin(a - b), sin(a)*cos(b) - cos(a)*sin(b)),
                            (cos(a + b), cos(a)*cos(b) - sin(a)*sin(b)),
-                           (cos(a - b), cos(a)*cos(b) + sin(a)*sin(b)))
+                           (cos(a - b), cos(a)*cos(b) + sin(a)*sin(b))),
                   'TR11': ((sin(2*a), 2*sin(a)*cos(a)),
-                           (cos(2*a), cos(a)**2 - sin(a)**2))
+                           (cos(2*a), cos(a)**2 - sin(a)**2)),
                   'TR12': ((tan(a + b), (tan(a) + tan(b))/(1 - tan(a)*tan(b))),
-                           (tan(a - b), (tan(a) - tan(b))/(1 + tan(a)*tan(b))))
+                           (tan(a - b), (tan(a) - tan(b))/(1 +
+                               tan(a)*tan(b)))),
                   'TR13': ((tan(a)*tan(b), 1 - (tan(a) + tan(b))*cot(a + b)),
                            (cot(a)*cot(b), 1 + (cot(a) + cot(b))*cot(a + b)))}
 
+
 var("x n N y")
+ex1 = 1 - 1/4*sin(2*x)**2 - sin(y)**2 - cos(x)**4
+ex2 = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
+ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
 
 def test_get_pi_shift():
     assert get_pi_shift(x+2*pi/12) == (x, 2)
