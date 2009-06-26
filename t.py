@@ -51,7 +51,7 @@ class TrigFunction(Basic):
     def eval(cls, arg):
         x, n = get_pi_shift(arg)
         if n.is_integer:
-            m = n % (12*cls.period)
+            m = n % (12 * cls.period)
             if x == 0:
                 # if x == 0, it means we can immediately simplify
                 return cls.eval_direct(m)
