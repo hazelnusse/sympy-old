@@ -148,7 +148,8 @@ cos = Cos
 tan = Tan
 cot = Cot
 
-var("a b")
+a,b = map(Wild, 'ab')
+
 rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
                   'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
                   'TR5': ((sin(a)**2, 1 - cos(a)**2)),
@@ -175,7 +176,22 @@ rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
 
 
 var("x n N y")
-ex1 = 1 - 1/4*sin(2*x)**2 - sin(y)**2 - cos(x)**4
+
+### Three examples from Fu et. al
+ex1 = 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4
+print ex1
+ex1_1 = ex1.subs(sin(2*x), 2*sin(x)*cos(x))
+print ex1_1
+ex1_2 = ex1_1.subs({sin(x)**2: 1-cos(x)**2, sin(y)**2: 1-cos(y)**2}).expand()
+print ex1_2
+ex1_3 = ex1_2.subs({cos(x)**2: 1 + cos(2*x)/2, cos(y)**2: 1 +
+    cos(2*y)/2}).expand()
+print ex1_3
+# stuck here... need to factor out the 1/2 from ex1_3
+
+
+
+
 ex2 = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
 ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
 
