@@ -179,3 +179,16 @@ def test_Tan():
     assert Tan(pi/4) == 1
     assert Tan(pi/3) == sqrt(3)
     #assert Tan(pi/2) == oo
+
+def test_Cot():
+    assert Cot(-y) == -Cot(y)
+    assert Cot(pi - y) == -Cot(y)
+    assert Cot(pi + y) == Cot(y)
+    assert Cot(2*pi - y) == -Cot(y)
+    assert Cot(pi/2 + y) == -Tan(y)
+    assert Cot(pi/2 - y) == Tan(y)
+    #assert Cot(0) == 0
+    assert Cot(pi/6) == sqrt(3)
+    assert Cot(pi/4) == 1
+    assert Cot(pi/3) == 1/sqrt(3)
+    assert Cot(pi/2) == 0
