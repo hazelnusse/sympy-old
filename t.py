@@ -16,8 +16,10 @@ sin_table = [
 
 class TrigFunction(Basic):
 
-    def __new__(cls, arg):
+    def __new__(cls, arg, eval=True):
         arg = sympify(arg)
+        if not eval:
+            return Basic.__new__(cls, arg)
         r = cls.eval(arg)
         if r is not None:
             return r
@@ -32,6 +34,14 @@ class TrigFunction(Basic):
             if x == 0:
                 # if x == 0, it means we can immediatelly simplify
                 return cls.eval_direct(m)
+            if not m % (12*cls.period):
+                return cls(x, eval=False)
+            else:
+                if not m % 12:
+                    return -cls(x, eval=False)
+                elif not m % 6:
+                    # conjugates + sign
+                    pass
 
 class Sin(TrigFunction):
     odd = True
@@ -98,11 +108,12 @@ print get_pi_shift(y+n*pi)
 print get_pi_shift(pi/2)
 print get_pi_shift(y)
 
-print Sin(0)
-print Sin(pi/2)
-print Sin(pi)
-print Cos(0)
-print Cos(pi/2)
-print Cos(pi)
+print Sin(y + 0)
+print Sin(y + 2*pi)
+print Sin(y + pi/2)
+print Sin(y + pi)
+print Cos(y + 0)
+print Cos(y + pi/2)
+print Cos(y + pi)
 
-print Sin(pi/5)
+print Sin(y + pi/5)
