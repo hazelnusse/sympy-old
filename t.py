@@ -178,10 +178,10 @@ def test_get_pi_shift():
     assert get_pi_shift(y) == (y, 0)
 
 def test_sin():
-    assert sin(-y) == -Sin(y)
-    assert sin(pi - y) == Sin(y)
-    assert sin(pi + y) == -Sin(y)
-    assert sin(2*pi - y) == -Sin(y)
+    assert sin(-y) == -sin(y)
+    assert sin(pi - y) == sin(y)
+    assert sin(pi + y) == -sin(y)
+    assert sin(2*pi - y) == -sin(y)
     assert sin(pi/2 + y) == cos(y)
     assert sin(pi/2 - y) == cos(y)
     assert sin(0) == 0
@@ -191,10 +191,10 @@ def test_sin():
     assert sin(pi/2) == 1
 
 def test_cos():
-    assert cos(-y) == Cos(y)
-    assert cos(pi - y) == -Cos(y)
-    assert cos(pi + y) == -Cos(y)
-    assert cos(2*pi - y) == Cos(y)
+    assert cos(-y) == cos(y)
+    assert cos(pi - y) == -cos(y)
+    assert cos(pi + y) == -cos(y)
+    assert cos(2*pi - y) == cos(y)
     assert cos(pi/2 + y) == -sin(y)
     assert cos(pi/2 - y) == sin(y)
     assert cos(0) == 1
@@ -204,10 +204,10 @@ def test_cos():
     assert cos(pi/2) == 0
 
 def test_tan():
-    assert tan(-y) == -Tan(y)
-    assert tan(pi - y) == -Tan(y)
-    assert tan(pi + y) == Tan(y)
-    assert tan(2*pi - y) == -Tan(y)
+    assert tan(-y) == -tan(y)
+    assert tan(pi - y) == -tan(y)
+    assert tan(pi + y) == tan(y)
+    assert tan(2*pi - y) == -tan(y)
     assert tan(pi/2 + y) == -cot(y)
     assert tan(pi/2 - y) == cot(y)
     assert tan(0) == 0
@@ -217,10 +217,10 @@ def test_tan():
     #assert tan(pi/2) == oo
 
 def test_cot():
-    assert cot(-y) == -Cot(y)
-    assert cot(pi - y) == -Cot(y)
-    assert cot(pi + y) == Cot(y)
-    assert cot(2*pi - y) == -Cot(y)
+    assert cot(-y) == -cot(y)
+    assert cot(pi - y) == -cot(y)
+    assert cot(pi + y) == cot(y)
+    assert cot(2*pi - y) == -cot(y)
     assert cot(pi/2 + y) == -tan(y)
     assert cot(pi/2 - y) == tan(y)
     #assert cot(0) == 0
