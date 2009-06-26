@@ -27,9 +27,11 @@ class TrigFunction(Basic):
     @classmethod
     def eval(cls, arg):
         x, n = get_pi_shift(arg)
-        m = n % (12*cls.period)
-        if x == 0:
-            return cls.eval_direct(m)
+        if n.is_integer:
+            m = n % (12*cls.period)
+            if x == 0:
+                # if x == 0, it means we can immediatelly simplify
+                return cls.eval_direct(m)
 
 class Sin(TrigFunction):
     odd = True
@@ -102,3 +104,5 @@ print Sin(pi)
 print Cos(0)
 print Cos(pi/2)
 print Cos(pi)
+
+print Sin(pi/5)
