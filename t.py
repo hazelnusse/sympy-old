@@ -141,22 +141,41 @@ def test_get_pi_shift():
     assert get_pi_shift(pi/2) == (0, 6)
     assert get_pi_shift(y) == (y, 0)
 
-def test_sin():
-    assert sin(0) == 0
-    assert sin(y+0) == sin(y)
-    assert sin(y+2*pi) == sin(y)
-    assert sin(y-2*pi) == sin(y)
-    assert sin(pi/2 - x) == cos(x)
+def test_Sin():
+    assert Sin(-y) == -Sin(y)
+    assert Sin(pi - y) == Sin(y)
+    assert Sin(pi + y) == -Sin(y)
+    assert Sin(2*pi - y) == -Sin(y)
+    assert Sin(pi/2 + y) == Cos(y)
+    assert Sin(pi/2 - y) == Cos(y)
+    assert Sin(0) == 0
+    assert Sin(pi/6) == S(1)/2
+    assert Sin(pi/4) == 1/sqrt(2)
+    assert Sin(pi/3) == sqrt(3)/2
+    assert Sin(pi/2) == 1
 
-    assert sin(pi/2) == 1
-    assert sin(pi/3) == sqrt(3)/2
+def test_Cos():
+    assert Cos(-y) == Cos(y)
+    assert Cos(pi - y) == -Cos(y)
+    assert Cos(pi + y) == -Cos(y)
+    assert Cos(2*pi - y) == Cos(y)
+    assert Cos(pi/2 + y) == -Sin(y)
+    assert Cos(pi/2 - y) == Sin(y)
+    assert Cos(0) == 1
+    assert Cos(pi/6) == sqrt(3)/2
+    assert Cos(pi/4) == 1/sqrt(2)
+    assert Cos(pi/3) == 1/S(2)
+    assert Cos(pi/2) == 0
 
-def test_cos():
-    assert cos(0) == 1
-    assert cos(y+0) == cos(y)
-    assert cos(y+2*pi) == cos(y)
-    assert cos(y-2*pi) == cos(y)
-    assert cos(pi/2 - x) == sin(x)
-
-    assert cos(pi/2) == 0
-    assert cos(pi/3) == S(1)/2
+def test_Tan():
+    assert Tan(-y) == -Tan(y)
+    assert Tan(pi - y) == -Tan(y)
+    assert Tan(pi + y) == Tan(y)
+    assert Tan(2*pi - y) == -Tan(y)
+    assert Tan(pi/2 + y) == -Cot(y)
+    assert Tan(pi/2 - y) == Cot(y)
+    assert Tan(0) == 0
+    assert Tan(pi/6) == 1/sqrt(3)
+    assert Tan(pi/4) == 1
+    assert Tan(pi/3) == sqrt(3)
+    #assert Tan(pi/2) == oo
