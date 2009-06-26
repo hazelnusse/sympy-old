@@ -56,17 +56,22 @@ class TrigFunction(Basic):
                 # if x == 0, it means we can immediately simplify
                 return cls.eval_direct(m)
             # Full-period symmetry (2*pi for sin/cos and pi for tan/cot)
-            if not m % (12*cls.period):
+            if m % (12 * cls.period) == 0:
                 return cls.handle_minus(x)
             else:
                 # pi-period symmetry (e.g. only sin/cos, since tan/cot were
                 # already handled above for this case)
-                if not m % 12:
+                if m % 12 == 0:
                     return -cls.handle_minus(x)
-                # pi/2-period symmetry
-                elif not m % 6:
+                # pi/2-period symmetry (m=6, 18 for sin/cos and m=6 for tan/cot)
+                elif m % 6 == 0:
                     f = conjugates[cls]
-                    sign = (-1)**((((m-6)//12) % cls.period) + f.odd)
+                    if m == 6:
+                        sign = 1
+                    else:
+                        sign = -1
+                    if f.odd:
+                        sign = -sign
                     return sign * f(x)
 
 class Sin(TrigFunction):
