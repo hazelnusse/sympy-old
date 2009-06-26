@@ -45,7 +45,7 @@ class TrigFunction(Basic):
         if n.is_integer:
             m = n % (12*cls.period)
             if x == 0:
-                # if x == 0, it means we can immediatelly simplify
+                # if x == 0, it means we can immediately simplify
                 return cls.eval_direct(m)
             # Full-period symmetry
             if not m % (12*cls.period):
