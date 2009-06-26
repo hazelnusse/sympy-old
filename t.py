@@ -75,8 +75,8 @@ class Cot(TrigFunction):
         return Cos.eval_direct(m)/Sin.eval_direct(m)
 
 def get_pi_shift(arg):
-    """Parse arg to determine pi shifts.  Returns x, n, N where:
-    arg = x + n*pi/N
+    """
+    If arg = x + n*pi/N, returns (x, n, N), otherwise None.
     """
     if arg.is_Add:
         x, m = arg.as_independent(S.Pi)
@@ -94,6 +94,7 @@ n = Symbol('n')
 N = Symbol('N')
 e = x + 2*pi/12
 print get_pi_shift(e)
+print get_pi_shift(x+n*pi)
 
 print Sin(0)
 print Sin(pi/2)
