@@ -127,21 +127,21 @@ def get_pi_shift(arg):
     assert r is not None
     return r[x], r[n]
 
+sin = Sin
+cos = Cos
+tan = Tan
+cot = Cot
+
+
 var("x n N y")
-print get_pi_shift(x+2*pi/12)
-print get_pi_shift(y+n*pi)
-print get_pi_shift(pi/2)
-print get_pi_shift(y)
+def test_get_pi_shift():
+    assert get_pi_shift(x+2*pi/12) == (x, 2)
+    assert get_pi_shift(y+n*pi) == (y, 12*n)
+    assert get_pi_shift(pi/2) == (0, 6)
+    assert get_pi_shift(y) == (y, 0)
 
-print Sin(y + 0)
-print Sin(y + 2*pi)
-print Sin(y + pi/2)
-print Sin(y + pi)
-print Cos(y + 0)
-print Cos(y + pi/2)
-print Cos(y + pi)
-
-print Sin(y + pi/5)
-
-print Sin(-y)
-print Cos(-y)
+def test_sin():
+    assert sin(0) == 0
+    assert sin(y+0) == sin(y)
+    assert sin(y+2*pi) == sin(y)
+    assert sin(y-2*pi) == sin(y)
