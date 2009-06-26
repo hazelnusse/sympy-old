@@ -19,7 +19,7 @@ class TrigFunction(Basic):
     def __new__(cls, arg):
         arg = sympify(arg)
         r = cls.eval(arg)
-        if r:
+        if r is not None:
             return r
         else:
             return Basic.__new__(cls, arg)
@@ -97,7 +97,7 @@ print get_pi_shift(pi/2)
 print get_pi_shift(y)
 
 print Sin(0)
-print Sin(y+pi/2)
+print Sin(pi/2)
 print Sin(pi)
 print Cos(0)
 print Cos(pi/2)
