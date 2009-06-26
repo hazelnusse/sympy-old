@@ -72,7 +72,7 @@ class TrigFunction(Basic):
                         sign = -1
                     if f.odd:
                         sign = -sign
-                    return sign * f(x)
+                    return sign * f.handle_minus(x)
 
 class Sin(TrigFunction):
     odd = True
