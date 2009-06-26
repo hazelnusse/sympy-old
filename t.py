@@ -35,7 +35,9 @@ class TrigFunction(Basic):
     @classmethod
     def handle_minus(cls, x):
         """
-        Returns cls(x), but takes into account "-".
+        Returns cls(x), but takes into account the sign of "x".
+
+        e.g. sin(-x) -> -sin(x), but cos(-x) -> cos(x)
         """
         if x.could_extract_minus_sign():
             if cls.odd:
@@ -53,14 +55,15 @@ class TrigFunction(Basic):
             if x == 0:
                 # if x == 0, it means we can immediately simplify
                 return cls.eval_direct(m)
-            # Full-period symmetry
+            # Full-period symmetry (2*pi for sin/cos and pi for tan/cot)
             if not m % (12*cls.period):
                 return cls.handle_minus(x)
             else:
-                # Half-period symmetry
+                # pi-period symmetry (e.g. only sin/cos, since tan/cot were
+                # already handled above for this case)
                 if not m % 12:
                     return -cls.handle_minus(x)
-                # Quarter-period symmetry
+                # pi/2-period symmetry
                 elif not m % 6:
                     f = conjugates[cls]
                     sign = (-1)**((((m-6)//12) % cls.period) + f.odd)
