@@ -132,6 +132,29 @@ cos = Cos
 tan = Tan
 cot = Cot
 
+rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
+                  'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
+                  'TR5': ((sin(a)**2, 1 - cos(a)**2)),
+                  'TR6': ((cos(a)**2, 1 - sin(a)**2)),
+                  'TR7': ((cos(a)**2, (1 + cos(2*a))/2)),
+                  'TR8': ((sin(a)*cos(b), (sin(a + b) + sin(a - b))/2),
+                          (cos(a)*sin(b), (sin(a + b) - sin(a - b))/2),
+                          (cos(a)*cos(b), (cos(a + b) + cos(a - b))/2),
+                          (sin(a)*sin(b), -(cos(a + b) - cos(a - b))/2)),
+                  'TR9': ((sin(a) + sin(b), 2*sin((a + b)/2)*cos((a - b)/2)),
+                          (sin(a) - sin(b), 2*cos((a + b)/2)*sin((a - b)/2)),
+                          (cos(a) + cos(b), 2*cos((a + b)/2)*cos((a - b)/2)),
+                          (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2)))
+                  'TR10': ((sin(a + b), sin(a)*cos(b) + cos(a)*sin(b)),
+                           (sin(a - b), sin(a)*cos(b) - cos(a)*sin(b)),
+                           (cos(a + b), cos(a)*cos(b) - sin(a)*sin(b)),
+                           (cos(a - b), cos(a)*cos(b) + sin(a)*sin(b)))
+                  'TR11': ((sin(2*a), 2*sin(a)*cos(a)),
+                           (cos(2*a), cos(a)**2 - sin(a)**2))
+                  'TR12': ((tan(a + b), (tan(a) + tan(b))/(1 - tan(a)*tan(b))),
+                           (tan(a - b), (tan(a) - tan(b))/(1 + tan(a)*tan(b))))
+                  'TR13': ((tan(a)*tan(b), 1 - (tan(a) + tan(b))*cot(a + b)),
+                           (cot(a)*cot(b), 1 + (cot(a) + cot(b))*cot(a + b)))}
 
 var("x n N y")
 
