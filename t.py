@@ -134,6 +134,7 @@ cot = Cot
 
 
 var("x n N y")
+
 def test_get_pi_shift():
     assert get_pi_shift(x+2*pi/12) == (x, 2)
     assert get_pi_shift(y+n*pi) == (y, 12*n)
@@ -145,3 +146,17 @@ def test_sin():
     assert sin(y+0) == sin(y)
     assert sin(y+2*pi) == sin(y)
     assert sin(y-2*pi) == sin(y)
+    assert sin(pi/2 - x) == cos(x)
+
+    assert sin(pi/2) == 1
+    assert sin(pi/3) == sqrt(3)/2
+
+def test_cos():
+    assert cos(0) == 1
+    assert cos(y+0) == cos(y)
+    assert cos(y+2*pi) == cos(y)
+    assert cos(y-2*pi) == cos(y)
+    assert cos(pi/2 - x) == sin(x)
+
+    assert cos(pi/2) == 0
+    assert cos(pi/3) == S(1)/2
