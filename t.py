@@ -187,9 +187,10 @@ print ex1_2
 ex1_3 = ex1_2.subs({cos(x)**2: 1 + cos(2*x)/2, cos(y)**2: 1 +
     cos(2*y)/2}).expand()
 print ex1_3
-print (ex1_3*2).expand()
-# stuck here... need to factor out the 1/2 from ex1_3
-
+ex1_4 = (ex1_3*2).expand().subs(cos(2*y) - cos(2*x), -2*sin(x+y)*sin(y - x))/2
+print ex1_4
+ex1_5 = ex1_4.subs(-sin(y - x), sin(y - x))
+print ex1_5
 
 
 
