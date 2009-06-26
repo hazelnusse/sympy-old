@@ -27,6 +27,19 @@ class TrigFunction(Basic):
             return Basic.__new__(cls, arg)
 
     @classmethod
+    def handle_minus(cls, x):
+        """
+        Returns cls(x), but takes into account "-".
+        """
+        if x.could_extract_minus_sign():
+            if cls.odd:
+                return -cls(-x, eval=False)
+            else:
+                return cls(-x, eval=False)
+        else:
+            return cls(x, eval=False)
+
+    @classmethod
     def eval(cls, arg):
         x, n = get_pi_shift(arg)
         if n.is_integer:
@@ -36,11 +49,11 @@ class TrigFunction(Basic):
                 return cls.eval_direct(m)
             # Full-period symmetry
             if not m % (12*cls.period):
-                return cls(x, eval=False)
+                return cls.handle_minus(x)
             else:
                 # Half-period symmetry
                 if not m % 12:
-                    return -cls(x, eval=False)
+                    return -cls.handle_minus(x)
                 # Quarter-period symmetry
                 elif not m % 6:
                     f = conjugates[cls]
@@ -129,3 +142,6 @@ print Cos(y + pi/2)
 print Cos(y + pi)
 
 print Sin(y + pi/5)
+
+print Sin(-y)
+print Cos(-y)
