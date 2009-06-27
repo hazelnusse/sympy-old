@@ -85,6 +85,9 @@ class Sin(TrigFunction):
         """
         return sin_table[m % 24]
 
+    def as_Cos(self):
+        return -Cos(self.args[0] + pi/2)
+
 
 class Cos(TrigFunction):
     odd = False
@@ -97,6 +100,9 @@ class Cos(TrigFunction):
         """
         # we use the relation cos(2*pi*m/24) = sin(2*pi*(m+6)/24)
         return Sin.eval_direct(m+6)
+
+    def as_Sin(self):
+            return Sin(self.args[0] + pi/2)
 
 class Tan(TrigFunction):
     odd = True
@@ -178,6 +184,8 @@ rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
 var("x n N y")
 
 ### Three examples from Fu et. al
+print '*'*20, '  Example 1  ', '*'*20
+print 'Original expression: 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4'
 ex1 = 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4
 print ex1
 ex1_1 = ex1.subs(sin(2*x), 2*sin(x)*cos(x))
@@ -192,9 +200,17 @@ print ex1_4
 ex1_5 = ex1_4.subs(-sin(y - x), sin(y - x))
 print ex1_5
 
-
-
+### Example 2
+print '*'*20, '  Example 2  ', '*'*20
+print 'Original expression: cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)'
 ex2 = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
+print ex2
+ex2_1 = ex2.subs(cos(4*pi/9), cos(4*pi/9).as_Sin())
+print ex2_1
+stop
+
+
+
 ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
 
 def test_get_pi_shift():
