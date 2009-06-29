@@ -83,10 +83,11 @@ class Sin(TrigFunction):
         """
         Returns the value of sin(2*pi*m/24) where m is an integer.
         """
+        #if 
         return sin_table[m % 24]
 
     def as_Cos(self):
-        return -Cos(self.args[0] + pi/2)
+        return Cos(pi/2 - self.args[0])
 
 
 class Cos(TrigFunction):
@@ -102,7 +103,7 @@ class Cos(TrigFunction):
         return Sin.eval_direct(m+6)
 
     def as_Sin(self):
-            return Sin(self.args[0] + pi/2)
+            return Sin(pi/2 - self.args[0])
 
 class Tan(TrigFunction):
     odd = True
@@ -182,7 +183,7 @@ rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
 
 
 var("x n N y")
-
+"""
 ### Three examples from Fu et. al
 print '*'*20, '  Example 1  ', '*'*20
 print 'Original expression: 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4'
@@ -207,11 +208,13 @@ ex2 = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
 print ex2
 ex2_1 = ex2.subs(cos(4*pi/9), cos(4*pi/9).as_Sin())
 print ex2_1
-stop
 
+"""
+print 'sin(17*pi/18)=',sin(17*pi/18)
+print cos(-4*pi/9)
+print sin(-4*pi/9)
 
-
-ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
+#ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
 
 def test_get_pi_shift():
     assert get_pi_shift(x+2*pi/12) == (x, 2)
