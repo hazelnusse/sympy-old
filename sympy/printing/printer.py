@@ -112,8 +112,8 @@ class Printer(object):
 
         class CustomStrPrinter(StrPrinter):
             \"\"\"
-            Example of how to customized the StrPrinter for both a Sympy class and a
-            user defined class.
+            Example of how to customize the StrPrinter for both a Sympy class and a
+            user defined class subclassed from the Sympy Basic class.
             \"\"\"
 
             def _print_Derivative(self, expr):
