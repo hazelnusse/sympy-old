@@ -1,5 +1,5 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
-        var, Wild, symbols)
+        var, Wild, symbols, floor, Rational)
 
 def sec(a):
     pass
@@ -51,16 +51,16 @@ class TrigFunction(Basic):
     def eval(cls, arg):
         #x, n = get_pi_shift(arg)
         x, r = get_pi_shift2(arg)
-        if r == S(0):
-            return None
-        else:
-            return cls.eval_direct2(x, r)
-        """
-        if n.is_integer:
-            m = n % (12 * cls.period)
-            if x == 0:
-                # if x == 0, it means we can immediately simplify
+        # Case 1:  x == 0 and r != 0
+        if x == 0 and r != 0:
+            if (r/12).is_integer:
+                m = (r/12) % (12 * cls.period)
                 return cls.eval_direct(m)
+            elif r.is_rational:
+                # m in [0, 2*pi] for sin/cos, [0, pi] for tan/cot
+                m = r % cls.period
+
+"""
             # Full-period symmetry (2*pi for sin/cos and pi for tan/cot)
             if m % (12 * cls.period) == 0:
                 return cls.handle_minus(x)
@@ -79,7 +79,12 @@ class TrigFunction(Basic):
                     if f.odd:
                         sign = -sign
                     return sign * f.handle_minus(x)
-        """
+"""
+
+def mod(x, y):
+    if x.is_rational and y.is_rational:
+        n = floor(x / y)
+        return Rational(x.p*y.q - n*y.p*x.q, x.q*y.q)
 
 class Sin(TrigFunction):
     odd = True
@@ -91,20 +96,6 @@ class Sin(TrigFunction):
         Returns the value of sin(2*pi*m/24) where m is an integer.
         """
         return sin_table[m % 24]
-
-    @classmethod
-    def eval_direct2(cls, x, m):
-        """
-        Returns the value of sin(2*pi*m/24) where m is an integer.
-        """
-        if x == S(0):
-            return sin_table[m/S(12) % 24]
-        else:
-
-
-    def as_Cos(self):
-        return Cos(pi/2 - self.args[0])
-
 
 class Cos(TrigFunction):
     odd = False
@@ -153,19 +144,20 @@ conjugates = {
     Cot: Tan,
     }
 
-def get_pi_shift(arg): """
-    If arg = x + n*pi/12, returns (x, n), otherwise None.
-    """
-    x = Wild("x", exclude=[pi])
-    n = Wild("n", exclude=[pi])
-    r = arg.match(x+n*pi/12)
-    # I think it should always match:
-    if r is None:
-        return arg, S(0)
-    else:
-        return r[x], r[n]
+#def get_pi_shift(arg): """
+#    If arg = x + n*pi/12, returns (x, n), otherwise None.
+#    """
+#    x = Wild("x", exclude=[pi])
+#    n = Wild("n", exclude=[pi])
+#    r = arg.match(x+n*pi/12)
+#    # I think it should always match:
+#    if r is None:
+#        return arg, S(0)
+#    else:
+#        return r[x], r[n]
 
-def get_pi_shift2(arg): """
+def get_pi_shift2(arg):
+    """
     If arg = x + c*pi, returns (x, c), otherwise None.
     """
     x = Wild("x", exclude=[pi])
@@ -175,7 +167,7 @@ def get_pi_shift2(arg): """
     if r is None:
         return arg, S(0)
     else:
-        return r[x], r[c] % S(2)*pi
+        return r[x], (r[c] % 2)
 
 sin = Sin
 cos = Cos

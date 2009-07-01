@@ -652,6 +652,11 @@ class Rational(Number):
 
         return True     # Rational != non-Number
 
+    def __mod__(self, other):
+        if not isinstance(other, Rational): other = Rational(other)
+        n = (self.p*other.q) // (other.p*self.q)
+        return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
+
     def __lt__(self, other):
         try:
             other = _sympify(other)
