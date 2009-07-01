@@ -107,8 +107,9 @@ class Printer(object):
 
     Example of overloading StrPrinter::
 
-        from sympy import Symbol, Function, Derivative, Basic
+        from sympy import Basic, Function, Symbol
         from sympy.printing.str import StrPrinter
+
         class CustomStrPrinter(StrPrinter):
             \"\"\"
             Example of how to customized the StrPrinter for both a Sympy class and a
