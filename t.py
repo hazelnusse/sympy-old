@@ -49,12 +49,12 @@ class TrigFunction(Basic):
 
     @classmethod
     def eval(cls, arg):
-        #x, n = get_pi_shift(arg)
-        x, r = get_pi_shift2(arg)
-        # Case 1:  x == 0 and r != 0
-        if x == 0 and r != 0:
-            if (r/12).is_integer:
-                m = (r/12) % (12 * cls.period)
+        # Match arg = a + b*pi
+        a, b = get_pi_shift2(arg)
+        # Case 1:  a == 0 and b != 0
+        if a == 0 and b != 0:
+            if (b/12).is_integer:
+                m = (b/12) % (12 * cls.period)
                 return cls.eval_direct(m)
             elif r.is_rational:
                 # m in [0, 2*pi] for sin/cos, [0, pi] for tan/cot
@@ -158,16 +158,16 @@ conjugates = {
 
 def get_pi_shift2(arg):
     """
-    If arg = x + c*pi, returns (x, c), otherwise None.
+    If arg = a + b*pi, returns (a, b), otherwise None.
     """
-    x = Wild("x", exclude=[pi])
-    c = Wild("c", exclude=[pi])
-    r = arg.match(x+c*pi)
+    a = Wild("a", exclude=[pi])
+    b = Wild("b", exclude=[pi])
+    r = arg.match(a+b*pi)
     # I think it should always match:
     if r is None:
         return arg, S(0)
     else:
-        return r[x], (r[c] % 2)
+        return r[a], (r[b] % 2)
 
 sin = Sin
 cos = Cos
