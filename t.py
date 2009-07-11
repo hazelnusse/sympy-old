@@ -1,10 +1,13 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
-        var, Wild, symbols, floor, Rational)
+        var, Wild, symbols, floor, Rational, I)
 
 def sec(a):
     pass
 
 def csc(a):
+    pass
+
+def sinh(a):
     pass
 
 C0 = (sqrt(3)-1)/(2*sqrt(2))
@@ -50,41 +53,73 @@ class TrigFunction(Basic):
     @classmethod
     def eval(cls, arg):
         # Match arg = a + b*pi
-        a, b = get_pi_shift2(arg)
-        # Case 1:  a == 0 and b != 0
-        if a == 0 and b != 0:
-            if (b/12).is_integer:
-                m = (b/12) % (12 * cls.period)
-                return cls.eval_direct(m)
-            elif r.is_rational:
-                # m in [0, 2*pi] for sin/cos, [0, pi] for tan/cot
-                m = r % cls.period
+        a, b = get_pi_shift(arg)
 
-"""
-            # Full-period symmetry (2*pi for sin/cos and pi for tan/cot)
-            if m % (12 * cls.period) == 0:
-                return cls.handle_minus(x)
-            else:
-                # pi-period symmetry (e.g. only sin/cos, since tan/cot were
-                # already handled above for this case)
-                if m % 12 == 0:
-                    return -cls.handle_minus(x)
-                # pi/2-period symmetry (m=6, 18 for sin/cos and m=6 for tan/cot)
-                elif m % 6 == 0:
-                    f = conjugates[cls]
-                    if m == 6:
-                        sign = 1
+        # Case 1:  a == 0 and b == 0
+        if a == 0 and b == 0:
+            return cls.eval_direct(0)
+        # Case 2:  a == 0 and b != 0
+        if b != 0:
+            if a.is_imaginary and b.is_imaginary:
+                return sinh(a.coeff(I) + b.coeff(I)*pi)
+            elif b.is_rational and b.is_real:
+                if (b*S(12)).is_integer:
+                    return cls.eval_direct(b)
+                else:
+                    # Bring it to inside of the period
+                    sign = S(1) if b.is_positive else S(-1)
+                    b = b % 2
+                    # Determine octant
+                    if 0 <= b <= 1/S(4):
+                        oct = 1
+                        quad = 1
+                    elif 1/S(4) < b <= 1/S(2):
+                        oct = 2
+                        quad = 1
+                    elif 1/S(2) < b <= 3/S(4):
+                        oct = 3
+                        quad = 2
+                    elif 3/S(4) < b <= S(1):
+                        oct = 4
+                        quad = 2
+                    elif S(1) < b <= 5/S(4):
+                        oct = 5
+                        quad = 3
+                    elif 5/S(4) < b <= S(3)/2:
+                        oct = 6
+                        quad = 3
+                    elif S(3)/2 < b <= 7/S(4):
+                        oct = 7
+                        quad = 4
                     else:
-                        sign = -1
-                    if f.odd:
-                        sign = -sign
-                    return sign * f.handle_minus(x)
-"""
+                        oct = 8
+                        quad = 4
+                    b_mod = b % cls.period/S(8)
+                    if cls == Sin:
+                        if oct == 1:
+                            return  
 
-def mod(x, y):
-    if x.is_rational and y.is_rational:
-        n = floor(x / y)
-        return Rational(x.p*y.q - n*y.p*x.q, x.q*y.q)
+
+                # Half period symmetry, i.e. if b = 3/2, b_mod will be 1/2 for
+                # sin/cos, 0 for tan/cot
+                b_mod = b % Rational(cls.period, 2)
+                if b_mod == 0:
+                    return -cls.eval_direct(0)
+
+                # Quarter period symmetry
+                b_mod = b % Rational(cls.period, 4)
+                if b_mod == 0:
+                    return -cls.eval_direct(6)
+
+                # Eighth period symmetry
+                b_mod = b % Rational(cls.period, 8)
+                if b_mod == 0:
+                    return cls.eval_direct(3)
+
+        elif b == 0:
+            print 'a!=0 and b==0'
+            pass
+
 
 class Sin(TrigFunction):
     odd = True
@@ -144,19 +179,7 @@ conjugates = {
     Cot: Tan,
     }
 
-#def get_pi_shift(arg): """
-#    If arg = x + n*pi/12, returns (x, n), otherwise None.
-#    """
-#    x = Wild("x", exclude=[pi])
-#    n = Wild("n", exclude=[pi])
-#    r = arg.match(x+n*pi/12)
-#    # I think it should always match:
-#    if r is None:
-#        return arg, S(0)
-#    else:
-#        return r[x], r[n]
-
-def get_pi_shift2(arg):
+def get_pi_shift(arg):
     """
     If arg = a + b*pi, returns (a, b), otherwise None.
     """
@@ -167,12 +190,15 @@ def get_pi_shift2(arg):
     if r is None:
         return arg, S(0)
     else:
-        return r[a], (r[b] % 2)
+        return sympify(r[a]), sympify(r[b])
+
+
 
 sin = Sin
 cos = Cos
 tan = Tan
 cot = Cot
+
 
 a,b = map(Wild, 'ab')
 
@@ -229,11 +255,6 @@ ex2_1 = ex2.subs(cos(4*pi/9), cos(4*pi/9).as_Sin())
 print ex2_1
 
 """
-print 'sin(17*pi/18)=',sin(17*pi/18)
-print cos(-4*pi/9)
-print sin(-4*pi/9)
-
-#ex3 = tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)
 
 def test_get_pi_shift():
     assert get_pi_shift(x+2*pi/12) == (x, 2)
