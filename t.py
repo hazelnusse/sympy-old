@@ -63,63 +63,44 @@ class TrigFunction(Basic):
             if a.is_imaginary and b.is_imaginary:
                 return sinh(a.coeff(I) + b.coeff(I)*pi)
             elif b.is_rational and b.is_real:
-                if (b*S(12)).is_integer:
-                    return cls.eval_direct(b)
+                if a == 0 and (b*S(12)).is_integer:
+                    return cls.eval_direct(b*S(12))
                 else:
-                    # Bring it to inside of the period
-                    sign = S(1) if b.is_positive else S(-1)
-                    b = b % 2
-                    # Determine octant
-                    if 0 <= b <= 1/S(4):
-                        oct = 1
-                        quad = 1
-                    elif 1/S(4) < b <= 1/S(2):
-                        oct = 2
-                        quad = 1
-                    elif 1/S(2) < b <= 3/S(4):
-                        oct = 3
-                        quad = 2
-                    elif 3/S(4) < b <= S(1):
-                        oct = 4
-                        quad = 2
-                    elif S(1) < b <= 5/S(4):
-                        oct = 5
-                        quad = 3
-                    elif 5/S(4) < b <= S(3)/2:
-                        oct = 6
-                        quad = 3
-                    elif S(3)/2 < b <= 7/S(4):
-                        oct = 7
-                        quad = 4
-                    else:
-                        oct = 8
-                        quad = 4
-                    b_mod = b % cls.period/S(8)
-                    if cls == Sin:
-                        if oct == 1:
-                            return  
+                # Bring it to inside of the period
+                sign = S(1) if b.is_positive else S(-1)
+                b = b % 2
+                # Determine octant
+                if 0 <= b <= 1/S(4):
+                    oct = 1
+                    quad = 1
+                elif 1/S(4) < b <= 1/S(2):
+                    oct = 2
+                    quad = 1
+                elif 1/S(2) < b <= 3/S(4):
+                    oct = 3
+                    quad = 2
+                elif 3/S(4) < b <= S(1):
+                    oct = 4
+                    quad = 2
+                elif S(1) < b <= 5/S(4):
+                    oct = 5
+                    quad = 3
+                elif 5/S(4) < b <= S(3)/2:
+                    oct = 6
+                    quad = 3
+                elif S(3)/2 < b <= 7/S(4):
+                    oct = 7
+                    quad = 4
+                else:
+                    oct = 8
+                    quad = 4
+                b_mod = b % cls.period/S(8)
 
-
-                # Half period symmetry, i.e. if b = 3/2, b_mod will be 1/2 for
-                # sin/cos, 0 for tan/cot
-                b_mod = b % Rational(cls.period, 2)
-                if b_mod == 0:
-                    return -cls.eval_direct(0)
-
-                # Quarter period symmetry
-                b_mod = b % Rational(cls.period, 4)
-                if b_mod == 0:
-                    return -cls.eval_direct(6)
-
-                # Eighth period symmetry
-                b_mod = b % Rational(cls.period, 8)
-                if b_mod == 0:
-                    return cls.eval_direct(3)
-
+                return cls.indirect_eval(a, b_mod, sign, oct, quad)
+            else:
+                return cls(a + b*pi, eval=False)
         elif b == 0:
-            print 'a!=0 and b==0'
-            pass
-
+            return cls.handle_minus(a)
 
 class Sin(TrigFunction):
     odd = True
@@ -131,6 +112,20 @@ class Sin(TrigFunction):
         Returns the value of sin(2*pi*m/24) where m is an integer.
         """
         return sin_table[m % 24]
+
+    @classmethod
+    def eval_indirect(cls, a, b_mod, sign, oct, quad):
+        """
+        Puts any pi-shifts into the interval (0, pi/4)
+        """
+        if oct == 1:
+            return cls.handle_minus(a + b_mod*pi)
+        elif oct == 2:
+            pass
+        else:
+            pass
+
+
 
 class Cos(TrigFunction):
     odd = False
