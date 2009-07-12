@@ -812,11 +812,11 @@ class Integer(Rational):
         else:
             return Integer(-self.p)
 
-    def __mod__(self, other):
-        return self.p % other
+    #def __mod__(self, other):
+    #    return self.p % other
 
-    def __rmod__(self, other):
-        return other % self.p
+    #def __rmod__(self, other):
+    #    return other % self.p
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):

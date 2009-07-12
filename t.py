@@ -85,7 +85,8 @@ class TrigFunction(Basic):
                         oct = 7
                     else:
                         oct = 8
-                    b_mod = b % (cls.period/S(8))
+                    b_mod = b % Rational(cls.period, 8)
+                    print type(b)
                     return cls.eval_indirect(a, b, b_mod, oct)
             else:
                 return cls(a + b*pi, eval=False)
@@ -196,10 +197,13 @@ cos = Cos
 tan = Tan
 cot = Cot
 
+
+var("x y n")
+
 def test_get_pi_shift():
-    assert get_pi_shift(x+2*pi/12) == (x, 2)
-    assert get_pi_shift(y+n*pi) == (y, 12*n)
-    assert get_pi_shift(pi/2) == (0, 6)
+    assert get_pi_shift(x+2*pi/12) == (x, 1/S(6))
+    assert get_pi_shift(y+n*pi) == (y, n)
+    assert get_pi_shift(pi/2) == (0, 1/S(2))
     assert get_pi_shift(y) == (y, 0)
     assert get_pi_shift(x + y) == (x+y, 0)
 
