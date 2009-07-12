@@ -66,37 +66,27 @@ class TrigFunction(Basic):
                 if a == 0 and (b*S(12)).is_integer:
                     return cls.eval_direct(b*S(12))
                 else:
-                # Bring it to inside of the period
-                sign = S(1) if b.is_positive else S(-1)
-                b = b % 2
-                # Determine octant
-                if 0 <= b <= 1/S(4):
-                    oct = 1
-                    quad = 1
-                elif 1/S(4) < b <= 1/S(2):
-                    oct = 2
-                    quad = 1
-                elif 1/S(2) < b <= 3/S(4):
-                    oct = 3
-                    quad = 2
-                elif 3/S(4) < b <= S(1):
-                    oct = 4
-                    quad = 2
-                elif S(1) < b <= 5/S(4):
-                    oct = 5
-                    quad = 3
-                elif 5/S(4) < b <= S(3)/2:
-                    oct = 6
-                    quad = 3
-                elif S(3)/2 < b <= 7/S(4):
-                    oct = 7
-                    quad = 4
-                else:
-                    oct = 8
-                    quad = 4
-                b_mod = b % cls.period/S(8)
-
-                return cls.indirect_eval(a, b_mod, sign, oct, quad)
+                    # Bring it to inside of the period
+                    b = b % 2
+                    # Determine octant
+                    if 0 <= b <= 1/S(4):
+                        oct = 1
+                    elif 1/S(4) < b <= 1/S(2):
+                        oct = 2
+                    elif 1/S(2) < b <= 3/S(4):
+                        oct = 3
+                    elif 3/S(4) < b <= S(1):
+                        oct = 4
+                    elif S(1) < b <= 5/S(4):
+                        oct = 5
+                    elif 5/S(4) < b <= S(3)/2:
+                        oct = 6
+                    elif S(3)/2 < b <= 7/S(4):
+                        oct = 7
+                    else:
+                        oct = 8
+                    b_mod = b % (cls.period/S(8))
+                    return cls.eval_indirect(a, b, b_mod, oct)
             else:
                 return cls(a + b*pi, eval=False)
         elif b == 0:
@@ -114,18 +104,26 @@ class Sin(TrigFunction):
         return sin_table[m % 24]
 
     @classmethod
-    def eval_indirect(cls, a, b_mod, sign, oct, quad):
+    def eval_indirect(cls, a, b, b_mod, oct):
         """
         Puts any pi-shifts into the interval (0, pi/4)
         """
         if oct == 1:
             return cls.handle_minus(a + b_mod*pi)
         elif oct == 2:
-            pass
-        else:
-            pass
-
-
+            return Cos.handle_minus(-a + b_mod*pi)
+        elif oct == 3:
+            return Cos.handle_minus(a + b_mod*pi)
+        elif oct == 4:
+            return cls.handle_minus(-a + b_mod*pi)
+        elif oct == 5:
+            return -cls.handle_minus(a + b_mod*pi)
+        elif oct == 6:
+            return -Cos.handle_minus(-a + b_mod*pi)
+        elif oct == 7:
+            return -Cos.handle_minus(a + b_mod*pi)
+        elif oct == 8:
+            return -cls.handle_minus(-a + b_mod*pi)
 
 class Cos(TrigFunction):
     odd = False
@@ -138,6 +136,10 @@ class Cos(TrigFunction):
         """
         # we use the relation cos(2*pi*m/24) = sin(2*pi*(m+6)/24)
         return Sin.eval_direct(m+6)
+
+    @classmethod
+    def eval_indirect(cls, a, b, b_mod, oct):
+        return Sin.eval(a + (b + 1/S(2))*pi)
 
     def as_Sin(self):
             return Sin(pi/2 - self.args[0])

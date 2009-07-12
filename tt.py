@@ -1,7 +1,65 @@
 from t import *
+from sympy import S, pi
+x = symbols('x')
+print 'sin(x + 0) =', sin(x + 0)
+print 'Octant 1'
+print 'sin(x + pi/8) =', sin(x + pi/8)
+print 'sin(x - 15*pi/8) =', sin(x - 15*pi/8)
+print 'Octant 2'
+print 'sin(x + 3*pi/8) =', sin(x + 3*pi/8)
+print 'sin(x - 13*pi/8) =', sin(x - 13*pi/8)
+print 'Octant 3'
+print 'sin(x + 5*pi/8) =', sin(x + 5*pi/8)
+print 'sin(x - 11*pi/8) =', sin(x - 11*pi/8)
+print 'Octant 4'
+print 'sin(x + 7*pi/8) =', sin(x + 7*pi/8)
+print 'sin(x - 9*pi/8) =', sin(x - 9*pi/8)
+print 'Octant 5'
+print 'sin(x + 9*pi/8) =', sin(x + 9*pi/8)
+print 'sin(x - 7*pi/8) =', sin(x - 7*pi/8)
 
-# Case 1:  a + b*pi with a == b == 0
-print sin(0)
+print 'Octant 6'
+print 'sin(x + 11*pi/8) =', sin(x + 11*pi/8)
+print 'sin(x - 5*pi/8) =', sin(x - 5*pi/8)
+
+print 'Octant 7'
+print 'sin(x + 13*pi/8) =', sin(x + 13*pi/8)
+print 'sin(x - 3*pi/8) =', sin(x - 3*pi/8)
+
+print 'Octant 8'
+print 'sin(x + 15*pi/8) =', sin(x + 15*pi/8)
+print 'sin(x - pi/8) =', sin(x - pi/8)
+
+print 'cos(x + 0) =', cos(x + 0)
+print 'Octant 1'
+print 'cos(x + pi/8) =', cos(x + pi/8)
+print 'cos(x - 15*pi/8) =', cos(x - 15*pi/8)
+print 'Octant 2'
+print 'cos(x + 3*pi/8) =', cos(x + 3*pi/8)
+print 'cos(x - 13*pi/8) =', cos(x - 13*pi/8)
+print 'Octant 3'
+print 'cos(x + 5*pi/8) =', cos(x + 5*pi/8)
+print 'cos(x - 11*pi/8) =', cos(x - 11*pi/8)
+print 'Octant 4'
+print 'cos(x + 7*pi/8) =', cos(x + 7*pi/8)
+print 'cos(x - 9*pi/8) =', cos(x - 9*pi/8)
+print 'Octant 5'
+print 'cos(x + 9*pi/8) =', cos(x + 9*pi/8)
+print 'cos(x - 7*pi/8) =', cos(x - 7*pi/8)
+
+print 'Octant 6'
+print 'cos(x + 11*pi/8) =', cos(x + 11*pi/8)
+print 'cos(x - 5*pi/8) =', cos(x - 5*pi/8)
+
+print 'Octant 7'
+print 'cos(x + 13*pi/8) =', cos(x + 13*pi/8)
+print 'cos(x - 3*pi/8) =', cos(x - 3*pi/8)
+
+print 'Octant 8'
+print 'cos(x + 15*pi/8) =', cos(x + 15*pi/8)
+print 'cos(x - pi/8) =', cos(x - pi/8)
+stop
+
 print cos(0)
 print tan(0)
 #print cot(0)
