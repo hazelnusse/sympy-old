@@ -196,7 +196,6 @@ cos = Cos
 tan = Tan
 cot = Cot
 
-
 a,b = map(Wild, 'ab')
 
 rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
