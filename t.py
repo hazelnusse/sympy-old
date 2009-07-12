@@ -196,62 +196,6 @@ cos = Cos
 tan = Tan
 cot = Cot
 
-a,b = map(Wild, 'ab')
-
-rule_dict = { 'TR1': ((sec(a), S(1)/cos(a)), (csc(a), S(1)/sin(a))),
-                  'TR2': ((tan(a), sin(a)/cos(a)), (cot(a), cos(a)/sin(a))),
-                  'TR5': ((sin(a)**2, 1 - cos(a)**2)),
-                  'TR6': ((cos(a)**2, 1 - sin(a)**2)),
-                  'TR7': ((cos(a)**2, (1 + cos(2*a))/2)),
-                  'TR8': ((sin(a)*cos(b), (sin(a + b) + sin(a - b))/2),
-                          (cos(a)*sin(b), (sin(a + b) - sin(a - b))/2),
-                          (cos(a)*cos(b), (cos(a + b) + cos(a - b))/2),
-                          (sin(a)*sin(b), -(cos(a + b) - cos(a - b))/2)),
-                  'TR9': ((sin(a) + sin(b), 2*sin((a + b)/2)*cos((a - b)/2)),
-                          (sin(a) - sin(b), 2*cos((a + b)/2)*sin((a - b)/2)),
-                          (cos(a) + cos(b), 2*cos((a + b)/2)*cos((a - b)/2)),
-                          (cos(a) - cos(b), -2*sin((a + b)/2)*sin((a - b)/2))),
-                  'TR10': ((sin(a + b), sin(a)*cos(b) + cos(a)*sin(b)),
-                           (sin(a - b), sin(a)*cos(b) - cos(a)*sin(b)),
-                           (cos(a + b), cos(a)*cos(b) - sin(a)*sin(b)),
-                           (cos(a - b), cos(a)*cos(b) + sin(a)*sin(b))),
-                  'TR11': ((sin(2*a), 2*sin(a)*cos(a)),
-                           (cos(2*a), cos(a)**2 - sin(a)**2)),
-                  'TR12': ((tan(a + b), (tan(a) + tan(b))/(1 - tan(a)*tan(b))),
-                           (tan(a - b), (tan(a) - tan(b))/(1 + tan(a)*tan(b)))),
-                  'TR13': ((tan(a)*tan(b), 1 - (tan(a) + tan(b))*cot(a + b)),
-                           (cot(a)*cot(b), 1 + (cot(a) + cot(b))*cot(a + b)))}
-
-
-var("x n N y")
-"""
-### Three examples from Fu et. al
-print '*'*20, '  Example 1  ', '*'*20
-print 'Original expression: 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4'
-ex1 = 1 - 1/S(4)*sin(2*x)**2 - sin(y)**2 - cos(x)**4
-print ex1
-ex1_1 = ex1.subs(sin(2*x), 2*sin(x)*cos(x))
-print ex1_1
-ex1_2 = ex1_1.subs({sin(x)**2: 1-cos(x)**2, sin(y)**2: 1-cos(y)**2}).expand()
-print ex1_2
-ex1_3 = ex1_2.subs({cos(x)**2: 1 + cos(2*x)/2, cos(y)**2: 1 +
-    cos(2*y)/2}).expand()
-print ex1_3
-ex1_4 = (ex1_3*2).expand().subs(cos(2*y) - cos(2*x), -2*sin(x+y)*sin(y - x))/2
-print ex1_4
-ex1_5 = ex1_4.subs(-sin(y - x), sin(y - x))
-print ex1_5
-
-### Example 2
-print '*'*20, '  Example 2  ', '*'*20
-print 'Original expression: cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)'
-ex2 = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
-print ex2
-ex2_1 = ex2.subs(cos(4*pi/9), cos(4*pi/9).as_Sin())
-print ex2_1
-
-"""
-
 def test_get_pi_shift():
     assert get_pi_shift(x+2*pi/12) == (x, 2)
     assert get_pi_shift(y+n*pi) == (y, 12*n)
