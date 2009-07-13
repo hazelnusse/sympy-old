@@ -64,7 +64,7 @@ class TrigFunction(Basic):
                 return sinh(a.coeff(I) + b.coeff(I)*pi)
             elif b.is_rational and b.is_real:
                 if a == 0 and (b*S(12)).is_integer:
-                    return cls.eval_direct(b*S(12))
+                    return cls.eval_direct(int(b*S(12)))
                 else:
                     # Bring it to inside of the period
                     b = b % 2
@@ -86,7 +86,6 @@ class TrigFunction(Basic):
                     else:
                         oct = 8
                     b_mod = b % Rational(cls.period, 8)
-                    print type(b)
                     return cls.eval_indirect(a, b, b_mod, oct)
             else:
                 return cls(a + b*pi, eval=False)
@@ -156,6 +155,17 @@ class Tan(TrigFunction):
         """
         # we use the relation tan(x) = sin(x)/cos(x)
         return Sin.eval_direct(m)/Cos.eval_direct(m)
+
+    @classmethod
+    def eval_indirect(cls, a, b, b_mod, oct):
+        if oct == 1 or oct == 5:
+            return cls.handle_minus(a + b_mod*pi)
+        elif oct == 2 or oct == 6:
+            return Cot.handle_minus(-a + b_mod*pi)
+        elif oct == 3 or oct == 7:
+            return -Cot.handle_minus(a + b_mod*pi)
+        elif oct == 4 or oct == 8:
+            return -cls.handle_minus(-a + b_mod*pi)
 
 class Cot(TrigFunction):
     odd = True
@@ -247,6 +257,22 @@ def test_sin():
     assert sin(3*pi/2) == -1
     assert sin(5*pi/2) == 1
 
+    assert sin(x - 15*pi/8) == sin(x + pi/8)
+    assert sin(x + 3*pi/8) == cos(pi/8 - x)
+    assert sin(x - 13*pi/8) == sin(x - 13*pi/8)
+    assert sin(x + 5*pi/8) == cos(x + pi/8)
+    assert sin(x - 11*pi/8) == cos(x + pi/8)
+    assert sin(x + 7*pi/8) == sin(pi/8 - x)
+    assert sin(x - 9*pi/8) == sin(pi/8 - x)
+    assert sin(x + 9*pi/8) == -sin(x + pi/8)
+    assert sin(x - 7*pi/8) == -sin(x + pi/8)
+    assert sin(x + 11*pi/8) == -cos(pi/8 - x)
+    assert sin(x - 5*pi/8) == -cos(pi/8 - x)
+    assert sin(x + 13*pi/8) == -cos(x + pi/8)
+    assert sin(x - 3*pi/8) == -cos(x + pi/8)
+    assert sin(x + 15*pi/8) == -sin(pi/8 - x)
+    assert sin(x - pi/8) == -sin(pi/8 - x)
+
 def test_cos():
     assert cos(-y) == cos(y)
     assert cos(pi - y) == -cos(y)
@@ -279,7 +305,6 @@ def test_cos():
     assert cos(11*pi/2) == 0
     assert cos(pi/12) == (1 + sqrt(3)) / (2 * sqrt(2))
 
-
 def test_tan():
     assert tan(-y) == -tan(y)
     assert tan(pi - y) == -tan(y)
@@ -305,6 +330,7 @@ def test_tan():
     assert tan(pi/3 + pi) == sqrt(3)
 
     assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
+"""
 
 def test_cot():
     assert cot(-y) == -cot(y)
@@ -365,3 +391,4 @@ def test_symmetry():
     assert cos(pi/2+x) == -sin(x)
     assert tan(pi/2+x) == -cot(x)
     assert cot(pi/2+x) == -tan(x)
+"""

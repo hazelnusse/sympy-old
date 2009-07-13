@@ -1,6 +1,7 @@
 from t import *
 from sympy import S, pi
 x = symbols('x')
+
 print 'sin(x + 0) =', sin(x + 0)
 print 'Octant 1'
 print 'sin(x + pi/8) =', sin(x + pi/8)
