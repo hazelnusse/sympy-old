@@ -359,6 +359,23 @@ def test_tan():
 
     assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
 
+    assert tan(x - 15*pi/8) == tan(x + pi/8)
+    assert tan(x + 3*pi/8) == cot(pi/8 - x)
+    assert tan(x - 13*pi/8) == cot(pi/8 - x)
+    assert tan(x + 5*pi/8) == -cot(x + pi/8)
+    assert tan(x - 11*pi/8) == -cot(x + pi/8)
+    assert tan(x + 7*pi/8) == -tan(pi/8 - x)
+    assert tan(x - 9*pi/8) == -tan(pi/8 - x)
+    assert tan(x + 9*pi/8) == tan(x + pi/8)
+    assert tan(x - 7*pi/8) == tan(x + pi/8)
+    assert tan(x + 11*pi/8) == cot(pi/8 - x)
+    assert tan(x - 5*pi/8) == cot(pi/8 - x)
+    assert tan(x + 13*pi/8) == -cot(x + pi/8)
+    assert tan(x - 3*pi/8) == -cot(x + pi/8)
+    assert tan(x + 15*pi/8) == -tan(pi/8 - x)
+    assert tan(x - pi/8) == -tan(pi/8 - x)
+
+
 def test_cot():
     assert cot(-y) == -cot(y)
     assert cot(pi - y) == -cot(y)
@@ -382,6 +399,22 @@ def test_cot():
     assert cot(pi/4 + pi) == 1
     assert cot(pi/3 + pi) == 1/sqrt(3)
     assert cot(pi/2 + pi) == 0
+
+    assert cot(x - 15*pi/8) == cot(x + pi/8)
+    assert cot(x + 3*pi/8) == tan(pi/8 - x)
+    assert cot(x - 13*pi/8) == tan(pi/8 - x)
+    assert cot(x + 5*pi/8) == -tan(x + pi/8)
+    assert cot(x - 11*pi/8) == -tan(x + pi/8)
+    assert cot(x + 7*pi/8) == -cot(pi/8 - x)
+    assert cot(x - 9*pi/8) == -cot(pi/8 - x)
+    assert cot(x + 9*pi/8) == cot(x + pi/8)
+    assert cot(x - 7*pi/8) == -cot(pi/8 - x)
+    assert cot(x + 11*pi/8) == tan(pi/8 - x)
+    assert cot(x - 5*pi/8) == tan(pi/8 - x)
+    assert cot(x + 13*pi/8) == -tan(x + pi/8)
+    assert cot(x - 3*pi/8) == -tan(x + pi/8)
+    assert cot(x + 15*pi/8) == -cot(pi/8 - x)
+    assert cot(x - pi/8) == -cot(pi/8 - x)
 
 def test_symmetry():
     assert sin(-x) == -sin(x)
