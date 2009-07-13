@@ -179,6 +179,17 @@ class Cot(TrigFunction):
         # we use the relation cot(x) = cos(x)/sin(x)
         return Cos.eval_direct(m)/Sin.eval_direct(m)
 
+    @classmethod
+    def eval_indirect(cls, a, b, b_mod, oct):
+        if oct == 1 or oct == 5:
+            return cls.handle_minus(a + b_mod*pi)
+        elif oct == 2 or oct == 6:
+            return Tan.handle_minus(-a + b_mod*pi)
+        elif oct == 3 or oct == 7:
+            return -Tan.handle_minus(a + b_mod*pi)
+        elif oct == 4 or oct == 8:
+            return -cls.handle_minus(-a + b_mod*pi)
+
 # pi/2-x symmetry:
 conjugates = {
     Sin: Cos,
@@ -347,7 +358,6 @@ def test_tan():
     assert tan(pi/3 + pi) == sqrt(3)
 
     assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
-"""
 
 def test_cot():
     assert cot(-y) == -cot(y)
@@ -408,4 +418,3 @@ def test_symmetry():
     assert cos(pi/2+x) == -sin(x)
     assert tan(pi/2+x) == -cot(x)
     assert cot(pi/2+x) == -tan(x)
-"""
