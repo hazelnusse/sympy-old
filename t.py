@@ -305,6 +305,23 @@ def test_cos():
     assert cos(11*pi/2) == 0
     assert cos(pi/12) == (1 + sqrt(3)) / (2 * sqrt(2))
 
+    assert cos(x - 15*pi/8) == cos(x + pi/8)
+    assert cos(x + 3*pi/8) == sin(pi/8 - x)
+    assert cos(x - 13*pi/8) == sin(pi/8 - x)
+    assert cos(x + 5*pi/8) == -sin(x + pi/8)
+    assert cos(x - 11*pi/8) == -sin(x + pi/8)
+    assert cos(x + 7*pi/8) == -cos(pi/8 - x)
+    assert cos(x - 9*pi/8) == -cos(pi/8 - x)
+    assert cos(x + 9*pi/8) == -cos(x + pi/8)
+    assert cos(x - 7*pi/8) == -cos(x + pi/8)
+    assert cos(x + 11*pi/8) == sin(x - pi/8)
+    assert cos(x - 5*pi/8) == sin(x - pi/8)
+    assert cos(x + 13*pi/8) == sin(x + pi/8)
+    assert cos(x - 3*pi/8) == sin(x + pi/8)
+    assert cos(x + 15*pi/8) == cos(pi/8 - x)
+    assert cos(x - pi/8) == cos(pi/8 - x)
+
+
 def test_tan():
     assert tan(-y) == -tan(y)
     assert tan(pi - y) == -tan(y)
