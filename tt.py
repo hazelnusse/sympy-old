@@ -1,7 +1,9 @@
 from t import *
-from sympy import S, pi
+from sympy import S, pi, I, oo
 x = symbols('x')
 k = Symbol('k', integer=True, odd=True)
+for n in range(-16, 17):
+    print tan(n*pi/16)
 stop
 
 print sin(1*pi/9)

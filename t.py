@@ -1,5 +1,6 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
-        var, Wild, symbols, floor, Rational, I, E, zoo, exp)
+        var, Wild, symbols, floor, Rational, I, E, zoo, exp, nan)
+from sympy.core.cache import cacheit
 
 C0 = (sqrt(3)-1)/(2*sqrt(2))
 C1 = S(1)/2
@@ -22,17 +23,20 @@ sin_table2 = [
         0,  C02,  C12,  C22,  C32,   1,  C32,  C22,  C12,  C02,
         0, -C02, -C12, -C22, -C32,  -1, -C32, -C22, -C12, -C02]
 
-class TrigFunction(Basic):
+class TrigFunction(Function):
+    """
+    Base class for all trigonometric functions.
+    """
 
     def __new__(cls, arg, eval=True):
         arg = sympify(arg)
         if not eval:
-            return Basic.__new__(cls, arg)
+            return Function.__new__(cls, arg)
         r = cls.eval(arg)
         if r is not None:
             return r
         else:
-            return Basic.__new__(cls, arg)
+            return Function.__new__(cls, arg)
 
     @classmethod
     def handle_minus(cls, x):
@@ -51,24 +55,33 @@ class TrigFunction(Basic):
 
     @classmethod
     def eval(cls, arg):
+        # Handle inverse trig functions
+        if isinstance(arg, (ASin, ACos, ATan, ACot, ASec, ACsc)):
+            cls.handle_inverse_trig(arg, type(arg))
+
         # Match arg = a + b*pi
         a, b = get_pi_shift(arg)
 
         # Case 1:  a == 0 and b == 0
         if a == 0 and b == 0:
             return cls.eval_direct(0)
+
         # Case 2:  a != 0 and b == 0
         elif a != 0 and b == 0:
             if a.is_imaginary:
                 return cls.hyper(a.coeff(I))
+            elif a is S.NaN:
+                return S.NaN
             else:
                 return cls.handle_minus(a)
+
         # Case 3: a == 0 and b != 0
         elif a == 0 and b != 0:
-            if a.is_imaginary:
+            if b.is_imaginary:
                 return cls.hyper(b.coeff(I))
             else:
                 return cls.eval_direct(b)
+
         # Case 4:  a != 0 and b != 0
         elif a != 0 and b != 0:
             if a.is_imaginary and b.is_imaginary:
@@ -102,6 +115,28 @@ class TrigFunction(Basic):
         else:
             oct = 8
         return oct
+
+class InverseTrigFunction(Function):
+    """
+    Base class for all inverse trig functions.
+    """
+
+    def __new__(cls, arg, eval=True):
+        arg = sympify(arg)
+        if not eval:
+            return Function.__new__(cls, arg)
+        r = cls.eval(arg)
+        if r is not None:
+            return r
+        else:
+            return Function.__new__(cls, arg)
+
+    @classmethod
+    def eval(cls, arg):
+        # Handle inverse trig functions
+        if isinstance(arg, (Sin, Cos, Tan, Cot, Sec, Csc)):
+            return cls.handle_inverse_trig(arg, type(arg))
+
 
 class Sin(TrigFunction):
     odd = True
@@ -164,6 +199,23 @@ class Sin(TrigFunction):
         elif oct == 8:
             return -cls.handle_minus(-a + b_mod*pi)
 
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return x
+        elif argtype == ACos:
+            return sqrt(1 - x**2)
+        elif argtype == ATan:
+            return x / sqrt(1 + x**2)
+        elif argtype == ASec:
+            return sqrt(1 - 1 / x**2)
+        elif argtype == ACsc:
+            return 1/x
+        elif argtype == ACot:
+            return 1 / (sqrt(1 + 1 / x**2) * x)
+
+
 class Cos(TrigFunction):
     odd = False
     period = 2
@@ -213,6 +265,22 @@ class Cos(TrigFunction):
     def as_Sin(self):
             return Sin(pi/2 - self.args[0])
 
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return sqrt(1 - x**2)
+        elif argtype == ACos:
+            return x
+        elif argtype == ATan:
+            return 1 / sqrt(1 + x**2)
+        elif argtype == ASec:
+            return 1 / x
+        elif argtype == ACsc:
+            return 1 / sqrt(1 - 1 / x**2)
+        elif argtype == ACot:
+            return 1 / (sqrt(1 + 1 / x**2))
+
 class Tan(TrigFunction):
     odd = True
     period = 1
@@ -222,37 +290,12 @@ class Tan(TrigFunction):
         """
         Returns the value of cos(b*pi) when direct evaluation is possible.
         """
-        return Sin.eval_direct(b)/Cos.eval_direct(b)
-        """
-        b = sympify(b)
-        if b.is_rational:
-            if (b*12).is_integer:
-                return sin_table[int(b*12) % 24]/sin_table[int(b*12 + 6) % 24]
-            elif b.q == 5:
-                sign = 1 if (b.p % 2 == 0) else -1
-                return Sin.eval_direct(b)/Cos.eval_direct(b)
-            else:
-                b = b % 2
-                oct = cls.determine_octant(b)
-                if oct == 1:
-                    return cls.handle_minus(b*pi)
-                elif oct == 2:
-                    return Cos.handle_minus((1/S(2) - b)*pi)
-                elif oct == 3:
-                    return Cos.handle_minus((b % (1/S(2)))*pi)
-                elif oct == 4:
-                    return cls.handle_minus((1 - b)*pi)
-                elif oct == 5:
-                    return -cls.handle_minus((b % 1)*pi)
-                elif oct == 6:
-                    return -Cos.handle_minus((3/S(2) - b)*pi)
-                elif oct == 7:
-                    return -Cos.handle_minus((b % (3/S(2)))*pi)
-                elif oct == 8:
-                    return -cls.handle_minus((2 - b)*pi)
+        num = Sin.eval_direct(b)
+        den = Cos.eval_direct(b)
+        if den != 0:
+            return Sin.eval_direct(b)/Cos.eval_direct(b)
         else:
-            return cls.handle_minus(b*pi)
-        """
+            return zoo
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
@@ -264,6 +307,46 @@ class Tan(TrigFunction):
             return -Cot.handle_minus(a + b_mod*pi)
         elif oct == 4 or oct == 8:
             return -cls.handle_minus(-a + b_mod*pi)
+
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return x / sqrt(1 - x**2)
+        elif argtype == ACos:
+            return sqrt(1 - x**2) / x
+        elif argtype == ATan:
+            return x
+        elif argtype == ASec:
+            return sqrt(1 - 1 / x**2) * x
+        elif argtype == ACsc:
+            return 1 / (sqrt(1 - 1 / x**2) * x)
+        elif argtype == ACot:
+            return 1 / x
+
+class Sec(TrigFunction):
+    odd = False
+    period = 2
+
+    @classmethod
+    def eval_direct(cls, m):
+        """
+        Returns the value of Sec(b*pi).
+        """
+        # we use the relation Sec(x) = 1 / Cos(x)
+        return 1 / Cos.eval_direct(m)
+
+class Csc(TrigFunction):
+    odd = False
+    period = 2
+
+    @classmethod
+    def eval_direct(cls, m):
+        """
+        Returns the value of Sec(b*pi).
+        """
+        # we use the relation cot(x) = cos(x)/sin(x)
+        return Cos.eval_direct(m)/Sin.eval_direct(m)
 
 class Cot(TrigFunction):
     odd = True
@@ -288,11 +371,6 @@ class Cot(TrigFunction):
         elif oct == 4 or oct == 8:
             return -cls.handle_minus(-a + b_mod*pi)
 
-def Sec(a):
-    pass
-
-def Csc(a):
-    pass
 
 def Sinh(a):
     pass
@@ -311,6 +389,7 @@ def Sech(a):
 
 def Csch(a):
     pass
+
 # pi/2-x symmetry:
 conjugates = {
     Sin: Cos,
@@ -330,7 +409,7 @@ def get_pi_shift(arg):
     if r is None:
         return arg, S(0)
     else:
-        return sympify(r[a]), sympify(r[b])
+        return sympify(r.get(a, 0)), sympify(r.get(b, 0))
 
 
 
@@ -348,7 +427,452 @@ sech = Sech
 csch = Csch
 
 
+###############################################################################
+########################### TRIGONOMETRIC INVERSES ############################
+###############################################################################
 
+class Asin(Function):
+    """
+    Usage
+    =====
+      asin(x) -> Returns the arc sine of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return (1 - self.args[0]**2)**(-S.Half)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.NegativeInfinity * S.ImaginaryUnit
+            elif arg is S.NegativeInfinity:
+                return S.Infinity * S.ImaginaryUnit
+            elif arg is S.Zero:
+                return S.Zero
+            elif arg is S.One:
+                return S.Pi / 2
+            elif arg is S.NegativeOne:
+                return -S.Pi / 2
+
+        if arg.is_number:
+            cst_table = {
+                S.Half     : 6,
+                -S.Half    : -6,
+                sqrt(2)/2  : 4,
+                -sqrt(2)/2 : -4,
+                1/sqrt(2)  : 4,
+                -1/sqrt(2) : -4,
+                sqrt(3)/2  : 3,
+                -sqrt(3)/2 : -3,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * C.asinh(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * (n-2)**2/(k*(k-1)) * x**2
+            else:
+                k = (n - 1) // 2
+
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
+
+                return R / F * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.asin(self.args[0]._sage_())
+
+class Acos(Function):
+    """
+    Usage
+    =====
+      acos(x) -> Returns the arc cosine of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -(1 - self.args[0]**2)**(-S.Half)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Infinity * S.ImaginaryUnit
+            elif arg is S.NegativeInfinity:
+                return S.NegativeInfinity * S.ImaginaryUnit
+            elif arg is S.Zero:
+                return S.Pi / 2
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi
+
+        if arg.is_number:
+            cst_table = {
+                S.Half     : S.Pi/3,
+                -S.Half    : 2*S.Pi/3,
+                sqrt(2)/2  : S.Pi/4,
+                -sqrt(2)/2 : 3*S.Pi/4,
+                1/sqrt(2)  : S.Pi/4,
+                -1/sqrt(2) : 3*S.Pi/4,
+                sqrt(3)/2  : S.Pi/6,
+                -sqrt(3)/2 : 5*S.Pi/6,
+                }
+
+            if arg in cst_table:
+                return cst_table[arg]
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.Pi / 2
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * (n-2)**2/(k*(k-1)) * x**2
+            else:
+                k = (n - 1) // 2
+
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
+
+                return -R / F * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acos(self.args[0]._sage_())
+
+class Atan(Function):
+    """
+    Usage
+    =====
+      atan(x) -> Returns the arc tangent of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/(1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi / 2
+            elif arg is S.NegativeInfinity:
+                return -S.Pi / 2
+            elif arg is S.Zero:
+                return S.Zero
+            elif arg is S.One:
+                return S.Pi / 4
+            elif arg is S.NegativeOne:
+                return -S.Pi / 4
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 6,
+                -sqrt(3)/3 : -6,
+                1/sqrt(3)  : 6,
+                -1/sqrt(3) : -6,
+                sqrt(3)    : 3,
+                -sqrt(3)   : -3,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * C.atanh(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return (-1)**((n-1)//2) * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.atan(self.args[0]._sage_())
+
+class ASec(Function):
+    """
+    Usage
+    =====
+      ASec(x) -> Returns the arc secant of x (measured in radians)
+    """
+
+    nargs = 1
+    # done
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1 / (sqrt(1 - 1 / x**2) * x**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+    # done
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi / 2
+            elif arg is S.NegativeInfinity:
+                return S.Pi / 2
+            elif arg is S.Zero:
+                return zoo
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 3,
+                -sqrt(3)/3 : -3,
+                1/sqrt(3)  : 3,
+                -1/sqrt(3) : -3,
+                sqrt(3)    : 6,
+                -sqrt(3)   : -6,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return -S.ImaginaryUnit * C.acoth(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.Pi / 2 # FIX THIS
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return (-1)**((n+1)//2) * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
+
+class Acot(Function):
+    """
+    Usage
+    =====
+      acot(x) -> Returns the arc cotangent of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1 / (1+self.args[0]**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return S.Pi/ 2
+            elif arg is S.One:
+                return S.Pi / 4
+            elif arg is S.NegativeOne:
+                return -S.Pi / 4
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 3,
+                -sqrt(3)/3 : -3,
+                1/sqrt(3)  : 3,
+                -1/sqrt(3) : -3,
+                sqrt(3)    : 6,
+                -sqrt(3)   : -6,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return -S.ImaginaryUnit * C.acoth(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.Pi / 2 # FIX THIS
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return (-1)**((n+1)//2) * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
+
+
+
+
+###### Tests #####
 def test_get_pi_shift():
     x, y, n = symbols('x y n')
     assert get_pi_shift(x+2*pi/12) == (x, 1/S(6))
@@ -420,7 +944,7 @@ def test_sin():
 
     k = Symbol('k', integer=True)
 
-    #assert sin(nan) == nan
+    assert sin(S.NaN) == S.NaN
 
     #assert sin(oo*I) == oo*I
     #assert sin(-oo*I) == -oo*I
@@ -476,6 +1000,21 @@ def test_sin():
     assert sin(6*pi/5) == -sin(1*pi/5)
     assert sin(8*pi/5) == -sin(2*pi/5)
 
+    assert sin(pi/10) == (sqrt(5)-1)/4
+    assert sin(3*pi/10) == (sqrt(5)+1)/4
+    assert sin(7*pi/10) == (sqrt(5)+1)/4
+    assert sin(9*pi/10) == (sqrt(5)-1)/4
+    assert sin(13*pi/10) == (-1-sqrt(5))/4
+    assert sin(17*pi/10) == (-1-sqrt(5))/4
+    assert sin(19*pi/10) == (1-sqrt(5))/4
+    assert sin(-pi/10) == (-sqrt(5)+1)/4
+    assert sin(-3*pi/10) == -(sqrt(5)+1)/4
+    assert sin(-7*pi/10) == -(sqrt(5)+1)/4
+    assert sin(-9*pi/10) == (-sqrt(5)+1)/4
+    assert sin(-13*pi/10) == (1+sqrt(5))/4
+    assert sin(-17*pi/10) == (1+sqrt(5))/4
+    assert sin(-19*pi/10) == (-1+sqrt(5))/4
+
     assert sin(-1273*pi/5) == -sin(2*pi/5)
 
     assert sin(pi/105) == sin(pi/105)
@@ -518,6 +1057,25 @@ def test_sin():
     assert sin(16*pi/9) == -sin(2*pi/9)
     assert sin(17*pi/9) == -sin(pi/9)
     assert sin(18*pi/9) == 0
+
+    assert sin(-1*pi/9) == -sin(pi/9)
+    assert sin(-2*pi/9) == -sin(2*pi/9)
+    assert sin(-3*pi/9) == -sqrt(3)/2
+    assert sin(-4*pi/9) == -cos(pi/18)
+    assert sin(-5*pi/9) == -cos(pi/18)
+    assert sin(-6*pi/9) == -sqrt(3)/2
+    assert sin(-7*pi/9) == -sin(2*pi/9)
+    assert sin(-8*pi/9) == -sin(pi/9)
+    assert sin(-9*pi/9) == 0
+    assert sin(-10*pi/9) == sin(pi/9)
+    assert sin(-11*pi/9) == sin(2*pi/9)
+    assert sin(-12*pi/9) == sqrt(3)/2
+    assert sin(-13*pi/9) == cos(pi/18)
+    assert sin(-14*pi/9) == cos(pi/18)
+    assert sin(-15*pi/9) == sqrt(3)/2
+    assert sin(-16*pi/9) == sin(2*pi/9)
+    assert sin(-17*pi/9) == sin(pi/9)
+    assert sin(-18*pi/9) == 0
 
 def test_cos():
     n, x, y = symbols('n x y')
@@ -572,8 +1130,8 @@ def test_cos():
     assert cos(x + 15*pi/8) == cos(pi/8 - x)
     assert cos(x - pi/8) == cos(pi/8 - x)
 
-    #assert cos(nan) == nan
-
+    assert cos(nan) == nan
+    # TODO implement cosh
     #assert cos(oo*I) == oo
     #assert cos(-oo*I) == oo
 
@@ -584,7 +1142,7 @@ def test_cos():
 
     assert cos(x) == cos(x)
     assert cos(-x) == cos(x)
-
+    # TODO implement acos, atanh, asin, acot
     #assert cos(acos(x)) == x
     #assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     #assert cos(asin(x)) == sqrt(1 - x**2)
@@ -629,6 +1187,20 @@ def test_cos():
     assert cos(6*pi/5) == -cos(1*pi/5)
     assert cos(8*pi/5) == cos(2*pi/5)
 
+    assert cos(pi/10) == sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(3*pi/10) == sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(7*pi/10) == -sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(9*pi/10) == -sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(11*pi/10) == -sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(13*pi/10) == -sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(17*pi/10) == sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(-pi/10) == sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(-3*pi/10) == sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(-7*pi/10) == -sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(-9*pi/10) == -sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(-11*pi/10) == -sqrt(5/S(8) + sqrt(5)/8)
+    assert cos(-13*pi/10) == -sqrt(5/S(8) - sqrt(5)/8)
+    assert cos(-17*pi/10) == sqrt(5/S(8) - sqrt(5)/8)
     assert cos(-1273*pi/5) == -cos(2*pi/5)
 
     assert cos(pi/105) == cos(pi/105)
@@ -642,14 +1214,14 @@ def test_cos():
 
     assert cos(2 + 3*I) == cos(2 + 3*I)
 
-    assert cos(x*I) == cosh(x)
+    #assert cos(x*I) == cosh(x)
 
     assert cos(k*pi) == cos(k*pi)
     assert cos(17*k*pi) == cos(17*k*pi)
 
-    assert cos(k*pi*I) == cosh(k*pi)
+    #assert cos(k*pi*I) == cosh(k*pi)
 
-    assert cos(r).is_real == True
+    #assert cos(r).is_real == True
 
     assert cos(exp(10)-1) == cos(-1+exp(10))
 
