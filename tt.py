@@ -1,6 +1,42 @@
 from t import *
 from sympy import S, pi
 x = symbols('x')
+k = Symbol('k', integer=True, odd=True)
+stop
+
+print sin(1*pi/9)
+print sin(2*pi/9)
+print sin(3*pi/9)
+print sin(4*pi/9)
+print sin(5*pi/9)
+print sin(6*pi/9)
+print sin(7*pi/9)
+print sin(8*pi/9)
+print sin(9*pi/9)
+print sin(10*pi/9)
+print sin(11*pi/9)
+print sin(12*pi/9)
+print sin(13*pi/9)
+print sin(14*pi/9)
+print sin(15*pi/9)
+print sin(16*pi/9)
+print sin(17*pi/9)
+print sin(18*pi/9)
+
+stop
+
+print sin(0)
+print sin(pi/12)
+print sin(pi/6)
+print sin(pi/4)
+stop
+
+print cos(0)
+print cos(pi/12)
+print cos(pi/6)
+print cos(pi/4)
+
+stop
 
 print 'sin(x + 0) =', sin(x + 0)
 print 'Octant 1'
