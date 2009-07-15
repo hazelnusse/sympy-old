@@ -219,16 +219,20 @@ class Sin(TrigFunction):
             return sqrt(1 - x**2)
         elif argtype == ATan:
             return x / sqrt(1 + x**2)
-        elif argtype == ASec:
-            return sqrt(1 - 1 / x**2)
         elif argtype == ACsc:
             return 1/x
+        elif argtype == ASec:
+            return sqrt(1 - 1 / x**2)
         elif argtype == ACot:
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
     @classmethod
     def reciprocal(cls):
         return Csc
+
+    @classmethod
+    def hyper(cls):
+        return Sinh
 
 class Cos(TrigFunction):
     odd = False
@@ -239,38 +243,7 @@ class Cos(TrigFunction):
         """
         Returns the value of Cos(b*pi) when direct evaluation is possible.
         """
-        b = sympify(b)
-        if b.is_rational:
-            if b.is_integer:
-                if b.is_even:
-                    return S.One
-                elif b.is_odd:
-                    return S.NegativeOne
-            elif (b*10).is_integer:
-                return sin_table2[int(b*10 + 5) % 20]
-            elif (b*12).is_integer:
-                return sin_table[int(b*12 + 6) % 24]
-            else:
-                b = b % 2
-                oct = cls.determine_octant(b)
-                if oct == 1:
-                    return cls.handle_minus(b*pi)
-                elif oct == 2:
-                    return Cos.handle_minus((1/S(2) - b)*pi)
-                elif oct == 3:
-                    return Cos.handle_minus((b % (1/S(2)))*pi)
-                elif oct == 4:
-                    return -cls.handle_minus((1 - b)*pi)
-                elif oct == 5:
-                    return -cls.handle_minus((b % 1)*pi)
-                elif oct == 6:
-                    return -Cos.handle_minus((3/S(2) - b)*pi)
-                elif oct == 7:
-                    return -Cos.handle_minus((b % (3/S(2)))*pi)
-                elif oct == 8:
-                    return cls.handle_minus((2 - b)*pi)
-        else:
-            return cls.handle_minus(b*pi)
+        return Sin.eval_direct(b + 1/S(2))
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
@@ -291,16 +264,20 @@ class Cos(TrigFunction):
             return x
         elif argtype == ATan:
             return 1 / sqrt(1 + x**2)
-        elif argtype == ASec:
-            return 1 / x
         elif argtype == ACsc:
             return 1 / sqrt(1 - 1 / x**2)
+        elif argtype == ASec:
+            return 1 / x
         elif argtype == ACot:
             return 1 / (sqrt(1 + 1 / x**2))
 
     @classmethod
     def reciprocal(cls):
         return Sec
+
+    @classmethod
+    def hyper(cls):
+        return Cosh
 
 class Tan(TrigFunction):
     odd = True
@@ -313,26 +290,30 @@ class Tan(TrigFunction):
         """
         num = Sin.eval_direct(b)
         den = Cos.eval_direct(b)
-        print 'num, den', num, den
         ln = len(num.args)
         ld = len(den.args)
-        if den == 0:
+        if num.atoms(Sin):
+            tf = Tan
+        else:
+            tf = Cot
+
+        if den == S.Zero:
             return zoo
         else:
-            if cls.still_trig_function(num) and cls.still_trig_function(den):
+            if all(map(cls.still_trig_function, (num, den))):
                 if ln == 1 and ld == 1:
                     assert num.args == den.args
-                    return cls.handle_minus(num.args[0])
+                    return tf.handle_minus(num.args[0])
                 elif ln == 1 and ld == 2:
                     assert num.args[0] == den.args[1].args[0]
-                    return cls.handle_minus(num.args[0]) / den.args[0]
+                    return tf.handle_minus(num.args[0]) / den.args[0]
                 elif ln == 2 and ld == 1:
                     assert num.args[1].args[0] == den.args[0]
-                    return num.args[0] * cls.handle_minus(num.args[1].args[0])
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0])
                 elif ln == 2 and ld == 2:
-                    print num.args[1].args[0], den.args[1].args[0]
+                    #print num.args[1].args[0], den.args[1].args[0]
                     assert num.args[1].args[0] == den.args[1].args[0]
-                    return num.args[0] * cls.handle_minus(num.args[1].args[0]) / \
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) / \
                         den.args[0]
             else:
                 return num / den
@@ -360,16 +341,20 @@ class Tan(TrigFunction):
             return sqrt(1 - x**2) / x
         elif argtype == ATan:
             return x
-        elif argtype == ASec:
-            return sqrt(1 - 1 / x**2) * x
         elif argtype == ACsc:
             return 1 / (sqrt(1 - 1 / x**2) * x)
+        elif argtype == ASec:
+            return sqrt(1 - 1 / x**2) * x
         elif argtype == ACot:
             return 1 / x
 
     @classmethod
     def reciprocal(cls):
         return Cot
+
+    @classmethod
+    def hyper(cls):
+        return Tanh
 
 class Csc(TrigFunction):
     odd = True
@@ -404,6 +389,30 @@ class Csc(TrigFunction):
         else:
             return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
 
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return 1 / x
+        elif argtype == ACos:
+            return 1 / sqrt(1 - x**2)
+        elif argtype == ATan:
+            return sqrt(1 + x**2) / x
+        elif argtype == ACsc:
+            return x
+        elif argtype == ASec:
+            return 1 / sqrt(1 - 1 / x**2)
+        elif argtype == ACot:
+            return sqrt(1 + 1 / x**2) * x
+
+    @classmethod
+    def reciprocal(cls):
+        return Sin
+
+    @classmethod
+    def hyper(cls):
+        return Csch
+
 class Sec(TrigFunction):
     odd = False
     period = 2
@@ -437,6 +446,30 @@ class Sec(TrigFunction):
         else:
             return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
 
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return 1 / sqrt(1 - x**2)
+        elif argtype == ACos:
+            return 1 / x
+        elif argtype == ATan:
+            return sqrt(1 + x**2)
+        elif argtype == ACsc:
+            return 1 / sqrt(1 - 1 / x**2)
+        elif argtype == ASec:
+            return x
+        elif argtype == ACot:
+            return sqrt(1 + 1 / x**2)
+
+    @classmethod
+    def reciprocal(cls):
+        return Cos
+
+    @classmethod
+    def hyper(cls):
+        return Sech
+
 class Cot(TrigFunction):
     odd = True
     period = 1
@@ -446,11 +479,36 @@ class Cot(TrigFunction):
         """
         Returns the value of Cot(b*pi) when direct evaluation is possible.
         """
-        # we use the relation cot(x) = cos(x)/sin(x)
-        den = Tan.eval_direct(b)
-        ld = len(den)
+        num = Cos.eval_direct(b)
+        den = Sin.eval_direct(b)
+        # Sometimes eval_direct will return a -Sin/-Cos ...
+        ln = len(num.args)
+        ld = len(den.args)
+        # Check if the numerator has a Sin
+        if num.atoms(Sin):
+            tf = Tan
+        else:
+            tf = Cot
 
-        return Cos.eval_direct(b)/Sin.eval_direct(b)
+        if den == S.Zero:
+            return zoo
+        else:
+            if all(map(cls.still_trig_function, (num, den))):
+                if ln == 1 and ld == 1:
+                    assert num.args == den.args
+                    return tf.handle_minus(num.args[0])
+                elif ln == 1 and ld == 2:
+                    assert num.args[0] == den.args[1].args[0]
+                    return tf.handle_minus(num.args[0]) / den.args[0]
+                elif ln == 2 and ld == 1:
+                    assert num.args[1].args[0] == den.args[0]
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0])
+                elif ln == 2 and ld == 2:
+                    assert num.args[1].args[0] == den.args[1].args[0]
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) / \
+                        den.args[0]
+            else:
+                return num / den
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
@@ -466,6 +524,29 @@ class Cot(TrigFunction):
         elif oct == 4 or oct == 8:
             return -cls.handle_minus(-a + b_mod*pi)
 
+    @classmethod
+    def handle_inverse_trig(cls, arg, argtype):
+        x = arg.args[0]
+        if argtype == ASin:
+            return sqrt(1 - x**2) / x
+        elif argtype == ACos:
+            return x / sqrt(1 - x**2)
+        elif argtype == ATan:
+            return 1 / x
+        elif argtype == ACsc:
+            return sqrt(1 - 1 / x**2) * x
+        elif argtype == ASec:
+            return 1 / (sqrt(1 - 1 / x**2) * x)
+        elif argtype == ACot:
+            return x
+
+    @classmethod
+    def reciprocal(cls):
+        return Tan
+
+    @classmethod
+    def hyper(cls):
+        return Coth
 
 def Sinh(a):
     pass
@@ -1429,7 +1510,7 @@ def test_tan():
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(pi/4) == 1
     assert tan(pi/3) == sqrt(3)
-    #assert tan(pi/2) == oo
+    assert tan(pi/2) == zoo
 
     assert tan(-y + pi) == -tan(y)
     assert tan(pi - y + pi) == -tan(y)
@@ -1460,6 +1541,39 @@ def test_tan():
     assert tan(x + 15*pi/8) == -tan(pi/8 - x)
     assert tan(x - pi/8) == -tan(pi/8 - x)
 
+    assert Tan(-16*pi/16) == 0
+    assert Tan(-15*pi/16) == Tan(pi/16)
+    assert Tan(-14*pi/16) == Tan(pi/8)
+    assert Tan(-13*pi/16) == Tan(3*pi/16)
+    assert Tan(-12*pi/16) == 1
+    assert Tan(-11*pi/16) == Cot(3*pi/16)
+    assert Tan(-10*pi/16) == Cot(pi/8)
+    assert Tan(-9*pi/16) == Cot(pi/16)
+    assert Tan(-8*pi/16) == zoo
+    assert Tan(-7*pi/16) == -Cot(pi/16)
+    assert Tan(-6*pi/16) == -Cot(pi/8)
+    assert Tan(-5*pi/16) == -Cot(3*pi/16)
+    assert Tan(-4*pi/16) == -1
+    assert Tan(-3*pi/16) == -Tan(3*pi/16)
+    assert Tan(-2*pi/16) == -Tan(pi/8)
+    assert Tan(-1*pi/16) == -Tan(pi/16)
+    assert Tan(0*pi/16) == 0
+    assert Tan(1*pi/16) == Tan(pi/16)
+    assert Tan(2*pi/16) == Tan(pi/8)
+    assert Tan(3*pi/16) == Tan(3*pi/16)
+    assert Tan(4*pi/16) == 1
+    assert Tan(5*pi/16) == Cot(3*pi/16)
+    assert Tan(6*pi/16) == Cot(pi/8)
+    assert Tan(7*pi/16) == Cot(pi/16)
+    assert Tan(8*pi/16) == zoo
+    assert Tan(9*pi/16) == -Cot(pi/16)
+    assert Tan(10*pi/16) == -Cot(pi/8)
+    assert Tan(11*pi/16) == -Cot(3*pi/16)
+    assert Tan(12*pi/16) == -1
+    assert Tan(13*pi/16) == -Tan(3*pi/16)
+    assert Tan(14*pi/16) == -Tan(pi/8)
+    assert Tan(15*pi/16) == -Tan(pi/16)
+    assert Tan(16*pi/16) == 0
 
 def test_cot():
     var("x y n")
@@ -1501,6 +1615,40 @@ def test_cot():
     assert cot(x - 3*pi/8) == -tan(x + pi/8)
     assert cot(x + 15*pi/8) == -cot(pi/8 - x)
     assert cot(x - pi/8) == -cot(pi/8 - x)
+
+    assert Cot(-16*pi/16) == zoo
+    assert Cot(-15*pi/16) == Cot(pi/16)
+    assert Cot(-14*pi/16) == Cot(pi/8)
+    assert Cot(-13*pi/16) == Cot(3*pi/16)
+    assert Cot(-12*pi/16) == 1
+    assert Cot(-11*pi/16) == Tan(3*pi/16)
+    assert Cot(-10*pi/16) == Tan(pi/8)
+    assert Cot(-9*pi/16) == Tan(pi/16)
+    assert Cot(-8*pi/16) == 0
+    assert Cot(-7*pi/16) == -Tan(pi/16)
+    assert Cot(-6*pi/16) == -Tan(pi/8)
+    assert Cot(-5*pi/16) == -Tan(3*pi/16)
+    assert Cot(-4*pi/16) == -1
+    assert Cot(-3*pi/16) == -Cot(3*pi/16)
+    assert Cot(-2*pi/16) == -Cot(pi/8)
+    assert Cot(-1*pi/16) == -Cot(pi/16)
+    assert Cot(0*pi/16) == zoo
+    assert Cot(1*pi/16) == Cot(pi/16)
+    assert Cot(2*pi/16) == Cot(pi/8)
+    assert Cot(3*pi/16) == Cot(3*pi/16)
+    assert Cot(4*pi/16) == 1
+    assert Cot(5*pi/16) == Tan(3*pi/16)
+    assert Cot(6*pi/16) == Tan(pi/8)
+    assert Cot(7*pi/16) == Tan(pi/16)
+    assert Cot(8*pi/16) == 0
+    assert Cot(9*pi/16) == -Tan(pi/16)
+    assert Cot(10*pi/16) == -Tan(pi/8)
+    assert Cot(11*pi/16) == -Tan(3*pi/16)
+    assert Cot(12*pi/16) == -1
+    assert Cot(13*pi/16) == -Cot(3*pi/16)
+    assert Cot(14*pi/16) == -Cot(pi/8)
+    assert Cot(15*pi/16) == -Cot(pi/16)
+    assert Cot(16*pi/16) == zoo
 
 def test_symmetry():
     var("x y n")

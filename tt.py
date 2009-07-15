@@ -4,8 +4,9 @@ x = symbols('x')
 k = Symbol('k', integer=True, odd=True)
 
 for n in range(-16, 17):
-    print n
-    print tan(n*pi/16)
+    print 'assert Tan(%i*pi/16) =='%n, tan(n*pi/16)
+for n in range(-16, 17):
+    print 'assert Cot(%i*pi/16) =='%n, cot(n*pi/16)
 stop
 
 print sin(1*pi/9)
