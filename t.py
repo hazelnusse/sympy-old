@@ -10,8 +10,8 @@ C4 = (sqrt(3)+1)/(2*sqrt(2))
 
 # sin_table[n] represents the value of sin(2*pi*n/24) for n = 0..23
 sin_table = [
-        0,  C0,  C1,  C2,  C3,  C4,  1,  C4,  C3,  C2,  C1,  C0,
-        0, -C0, -C1, -C2, -C3, -C4, -1, -C4, -C3, -C2, -C1, -C0
+        S.Zero,  C0,  C1,  C2,  C3,  C4,  S.One,  C4,  C3,  C2,  C1,  C0,
+        S.Zero, -C0, -C1, -C2, -C3, -C4, S.NegativeOne, -C4, -C3, -C2, -C1, -C0
         ]
 # sin_table2[n] represents the value of sin(n*pi/10) for n = 0...19
 C02 = (sqrt(5)-1)/4
@@ -20,10 +20,10 @@ C22 = (sqrt(5)+1)/4
 C32 = sqrt(5/S(8) + sqrt(5)/8)
 
 sin_table2 = [
-        0,  C02,  C12,  C22,  C32,   1,  C32,  C22,  C12,  C02,
-        0, -C02, -C12, -C22, -C32,  -1, -C32, -C22, -C12, -C02]
+        S.Zero,  C02,  C12,  C22,  C32,   S.One,  C32,  C22,  C12,  C02,
+        S.Zero, -C02, -C12, -C22, -C32,  S.NegativeOne, -C32, -C22, -C12, -C02]
 
-class TrigFunction(Function):
+class TrigFunction(Basic):
     """
     Base class for all trigonometric functions.
     """
@@ -31,12 +31,12 @@ class TrigFunction(Function):
     def __new__(cls, arg, eval=True):
         arg = sympify(arg)
         if not eval:
-            return Function.__new__(cls, arg)
+            return Basic.__new__(cls, arg)
         r = cls.eval(arg)
         if r is not None:
             return r
         else:
-            return Function.__new__(cls, arg)
+            return Basic.__new__(cls, arg)
 
     @classmethod
     def handle_minus(cls, x):
@@ -116,6 +116,17 @@ class TrigFunction(Function):
             oct = 8
         return oct
 
+    @classmethod
+    def still_trig_function(cls, expr):
+        """
+        Used to determine if the result of eval_direct returned an expression
+        with a trig function or not.
+        """
+        if expr.atoms(TrigFunction) == set():
+            return False
+        else:
+            return True
+
 class InverseTrigFunction(Function):
     """
     Base class for all inverse trig functions.
@@ -145,12 +156,12 @@ class Sin(TrigFunction):
     @classmethod
     def eval_direct(cls, b):
         """
-        Returns the value of sin(b*pi) when direct evaluation is possible.
+        Returns the value of Sin(b*pi) when direct evaluation is possible.
         """
         b = sympify(b)
         if b.is_rational:
             if b.is_integer:
-                return 0
+                return S.Zero
             elif (b*10).is_integer:
                 return sin_table2[int(b*10) % 20]
             elif (b*12).is_integer:
@@ -215,6 +226,9 @@ class Sin(TrigFunction):
         elif argtype == ACot:
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
+    @classmethod
+    def reciprocal(cls):
+        return Csc
 
 class Cos(TrigFunction):
     odd = False
@@ -223,15 +237,15 @@ class Cos(TrigFunction):
     @classmethod
     def eval_direct(cls, b):
         """
-        Returns the value of cos(b*pi) when direct evaluation is possible.
+        Returns the value of Cos(b*pi) when direct evaluation is possible.
         """
         b = sympify(b)
         if b.is_rational:
             if b.is_integer:
                 if b.is_even:
-                    return 1
+                    return S.One
                 elif b.is_odd:
-                    return -1
+                    return S.NegativeOne
             elif (b*10).is_integer:
                 return sin_table2[int(b*10 + 5) % 20]
             elif (b*12).is_integer:
@@ -260,6 +274,9 @@ class Cos(TrigFunction):
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
+        """
+        Puts any pi-shifts into the interval (0, pi/4)
+        """
         return Sin.eval(a + (b + 1/S(2))*pi)
 
     def as_Sin(self):
@@ -281,6 +298,10 @@ class Cos(TrigFunction):
         elif argtype == ACot:
             return 1 / (sqrt(1 + 1 / x**2))
 
+    @classmethod
+    def reciprocal(cls):
+        return Sec
+
 class Tan(TrigFunction):
     odd = True
     period = 1
@@ -288,17 +309,39 @@ class Tan(TrigFunction):
     @classmethod
     def eval_direct(cls, b):
         """
-        Returns the value of cos(b*pi) when direct evaluation is possible.
+        Returns the value of Tan(b*pi) when direct evaluation is possible.
         """
         num = Sin.eval_direct(b)
         den = Cos.eval_direct(b)
-        if den != 0:
-            return Sin.eval_direct(b)/Cos.eval_direct(b)
-        else:
+        print 'num, den', num, den
+        ln = len(num.args)
+        ld = len(den.args)
+        if den == 0:
             return zoo
+        else:
+            if cls.still_trig_function(num) and cls.still_trig_function(den):
+                if ln == 1 and ld == 1:
+                    assert num.args == den.args
+                    return cls.handle_minus(num.args[0])
+                elif ln == 1 and ld == 2:
+                    assert num.args[0] == den.args[1].args[0]
+                    return cls.handle_minus(num.args[0]) / den.args[0]
+                elif ln == 2 and ld == 1:
+                    assert num.args[1].args[0] == den.args[0]
+                    return num.args[0] * cls.handle_minus(num.args[1].args[0])
+                elif ln == 2 and ld == 2:
+                    print num.args[1].args[0], den.args[1].args[0]
+                    assert num.args[1].args[0] == den.args[1].args[0]
+                    return num.args[0] * cls.handle_minus(num.args[1].args[0]) / \
+                        den.args[0]
+            else:
+                return num / den
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
+        """
+        Puts any pi-shifts into the interval (0, pi/4)
+        """
         if oct == 1 or oct == 5:
             return cls.handle_minus(a + b_mod*pi)
         elif oct == 2 or oct == 6:
@@ -324,44 +367,96 @@ class Tan(TrigFunction):
         elif argtype == ACot:
             return 1 / x
 
+    @classmethod
+    def reciprocal(cls):
+        return Cot
+
+class Csc(TrigFunction):
+    odd = True
+    period = 2
+
+    @classmethod
+    def eval_direct(cls, m):
+        """
+        Returns the value of Csc(b*pi).
+        """
+        den = Sin.eval_direct(m)
+        if den == 0:
+            return zoo
+        ld = len(den.args)
+        if cls.still_trig_function(den):
+            if ld == 1:
+                return den.reciprocal.handle_minus(den.args[0])
+            else:
+                return den.args[1].reciprocal.handle_minus(den.args[1].args) / den.args[0]
+        else:
+            return 1 / den
+
+    @classmethod
+    def eval_indirect(cls, a, b, b_mod, oct):
+        """
+        Puts any pi-shifts into the interval (0, pi/4)
+        """
+        den = Sin.eval_indirect(m)
+        ld = len(den.args)
+        if ld == 1:
+            return den.reciprocal.handle_minus(den.args[0])
+        else:
+            return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
+
 class Sec(TrigFunction):
     odd = False
     period = 2
 
     @classmethod
-    def eval_direct(cls, m):
+    def eval_direct(cls, b):
         """
         Returns the value of Sec(b*pi).
         """
-        # we use the relation Sec(x) = 1 / Cos(x)
-        return 1 / Cos.eval_direct(m)
-
-class Csc(TrigFunction):
-    odd = False
-    period = 2
+        den = Cos.eval_direct(m)
+        if den == 0:
+            return zoo
+        ld = len(den.args)
+        if cls.still_trig_function(den):
+            if ld == 1:
+                return den.reciprocal.handle_minus(den.args[0])
+            else:
+                return den.args[1].reciprocal.handle_minus(den.args[1].args) / den.args[0]
+        else:
+            return 1 / den
 
     @classmethod
-    def eval_direct(cls, m):
+    def eval_indirect(cls, a, b, b_mod, oct):
         """
-        Returns the value of Sec(b*pi).
+        Puts any pi-shifts into the interval (0, pi/4)
         """
-        # we use the relation cot(x) = cos(x)/sin(x)
-        return Cos.eval_direct(m)/Sin.eval_direct(m)
+        den = Cos.eval_indirect(m)
+        ld = len(den.args)
+        if ld == 1:
+            return den.reciprocal.handle_minus(den.args[0])
+        else:
+            return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
 
 class Cot(TrigFunction):
     odd = True
     period = 1
 
     @classmethod
-    def eval_direct(cls, m):
+    def eval_direct(cls, b):
         """
-        Returns the value of cot(2*pi*m/24) where m is an integer.
+        Returns the value of Cot(b*pi) when direct evaluation is possible.
         """
         # we use the relation cot(x) = cos(x)/sin(x)
-        return Cos.eval_direct(m)/Sin.eval_direct(m)
+        den = Tan.eval_direct(b)
+        ld = len(den)
+
+        return Cos.eval_direct(b)/Sin.eval_direct(b)
 
     @classmethod
     def eval_indirect(cls, a, b, b_mod, oct):
+        """
+        Puts any pi-shifts into the interval (0, pi/4)
+        """
         if oct == 1 or oct == 5:
             return cls.handle_minus(a + b_mod*pi)
         elif oct == 2 or oct == 6:
@@ -413,25 +508,13 @@ def get_pi_shift(arg):
 
 
 
-sin = Sin
-cos = Cos
-tan = Tan
-cot = Cot
-sec = Sec
-csc = Csc
-sinh = Sinh
-cosh = Cosh
-tanh = Tanh
-coth = Coth
-sech = Sech
-csch = Csch
 
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
-class Asin(Function):
+class ASin(Function):
     """
     Usage
     =====
@@ -442,7 +525,7 @@ class Asin(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (1 - self.args[0]**2)**(-S.Half)
+            return sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -528,7 +611,7 @@ class Asin(Function):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
 
-class Acos(Function):
+class ACos(Function):
     """
     Usage
     =====
@@ -539,7 +622,7 @@ class Acos(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -(1 - self.args[0]**2)**(-S.Half)
+            return -sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -615,7 +698,7 @@ class Acos(Function):
         import sage.all as sage
         return sage.acos(self.args[0]._sage_())
 
-class Atan(Function):
+class ATan(Function):
     """
     Usage
     =====
@@ -701,6 +784,90 @@ class Atan(Function):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
 
+class ACsc(Function):
+    """
+    Usage
+    =====
+      ACsc(x) -> Returns the arc cosecant of x (measured in radians)
+    """
+
+    nargs = 1
+    # done
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1 / (sqrt(1 - 1 / x**2) * x**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+    # done
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi / 2
+            elif arg is S.NegativeInfinity:
+                return S.Pi / 2
+            elif arg is S.Zero:
+                return zoo
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 3,
+                -sqrt(3)/3 : -3,
+                1/sqrt(3)  : 3,
+                -1/sqrt(3) : -3,
+                sqrt(3)    : 6,
+                -sqrt(3)   : -6,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return -S.ImaginaryUnit * C.acoth(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.Pi / 2 # FIX THIS
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            return (-1)**((n+1)//2) * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
+
 class ASec(Function):
     """
     Usage
@@ -785,7 +952,7 @@ class ASec(Function):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
 
-class Acot(Function):
+class ACot(Function):
     """
     Usage
     =====
@@ -871,6 +1038,30 @@ class Acot(Function):
 
 
 
+sin = Sin
+cos = Cos
+tan = Tan
+cot = Cot
+sec = Sec
+csc = Csc
+asin = ASin
+acos = ACos
+atan = ATan
+acsc = ACsc
+asec = ASec
+acot = ACot
+sinh = Sinh
+cosh = Cosh
+tanh = Tanh
+coth = Coth
+sech = Sech
+#acsch = ACsch
+#asinh = ASinh
+#acosh = ACosh
+#atanh = ATanh
+#acoth = ACoth
+#asech = ASech
+#acsch = ACsch
 
 ###### Tests #####
 def test_get_pi_shift():
