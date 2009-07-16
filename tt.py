@@ -3,6 +3,17 @@ from sympy import S, pi, I, oo
 x = symbols('x')
 k = Symbol('k', integer=True, odd=True)
 
+print 'assert sin(asin(-x)) ==', sin(asin(-x))
+stop
+
+print 'assert sin(acos(x)) ==', sin(acos(x))
+print 'assert sin(atan(x)) ==', sin(atan(x))
+print 'assert sin(acsc(x)) ==', sin(acsc(x))
+print 'assert sin(asec(x)) ==', sin(asec(x))
+print 'assert sin(acot(x)) ==', sin(acot(x))
+stop
+
+
 for n in range(-16, 17):
     print 'assert Tan(%i*pi/16) =='%n, tan(n*pi/16)
 for n in range(-16, 17):

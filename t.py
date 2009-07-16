@@ -1,6 +1,7 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
         var, Wild, symbols, floor, Rational, I, E, zoo, exp, nan)
 from sympy.core.cache import cacheit
+from sympy import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 
 C0 = (sqrt(3)-1)/(2*sqrt(2))
 C1 = S(1)/2
@@ -46,7 +47,13 @@ class TrigFunction(Basic):
         e.g. sin(-x) -> -sin(x), but cos(-x) -> cos(x)
         """
         if x.could_extract_minus_sign():
-            if cls.odd:
+            # Handle inverse trig functions as the last step before evaluation
+            if isinstance(-x, (ASin, ACos, ATan, ACot, ASec, ACsc)):
+                if cls.odd:
+                    return -cls.handle_inverse_trig(-x, type(-x))
+                else:
+                    return cls.handle_inverse_trig(-x, type(-x))
+            elif cls.odd:
                 return -cls(-x, eval=False)
             else:
                 return cls(-x, eval=False)
@@ -55,10 +62,9 @@ class TrigFunction(Basic):
 
     @classmethod
     def eval(cls, arg):
-        # Handle inverse trig functions
-        if isinstance(arg, (ASin, ACos, ATan, ACot, ASec, ACsc)):
-            cls.handle_inverse_trig(arg, type(arg))
 
+        if isinstance(arg, (ASin, ACos, ATan, ACot, ASec, ACsc)):
+            return cls.handle_inverse_trig(arg, type(arg))
         # Match arg = a + b*pi
         a, b = get_pi_shift(arg)
 
@@ -127,7 +133,7 @@ class TrigFunction(Basic):
         else:
             return True
 
-class InverseTrigFunction(Function):
+class InverseTrigFunction(Basic):
     """
     Base class for all inverse trig functions.
     """
@@ -135,12 +141,12 @@ class InverseTrigFunction(Function):
     def __new__(cls, arg, eval=True):
         arg = sympify(arg)
         if not eval:
-            return Function.__new__(cls, arg)
+            return Basic.__new__(cls, arg)
         r = cls.eval(arg)
         if r is not None:
             return r
         else:
-            return Function.__new__(cls, arg)
+            return Basic.__new__(cls, arg)
 
     @classmethod
     def eval(cls, arg):
@@ -186,6 +192,7 @@ class Sin(TrigFunction):
                 elif oct == 8:
                     return -cls.handle_minus((2 - b)*pi)
         else:
+            # Case when no direct evaluation is possible
             return cls.handle_minus(b*pi)
 
     @classmethod
@@ -193,22 +200,46 @@ class Sin(TrigFunction):
         """
         Puts any pi-shifts into the interval (0, pi/4)
         """
-        if oct == 1:
-            return cls.handle_minus(a + b_mod*pi)
-        elif oct == 2:
-            return Cos.handle_minus(-a + b_mod*pi)
-        elif oct == 3:
-            return Cos.handle_minus(a + b_mod*pi)
-        elif oct == 4:
-            return cls.handle_minus(-a + b_mod*pi)
-        elif oct == 5:
-            return -cls.handle_minus(a + b_mod*pi)
-        elif oct == 6:
-            return -Cos.handle_minus(-a + b_mod*pi)
-        elif oct == 7:
-            return -Cos.handle_minus(a + b_mod*pi)
-        elif oct == 8:
-            return -cls.handle_minus(-a + b_mod*pi)
+        # Re-evaluate if the pi shift can be zero using another trig function
+        if b_mod == 0:
+            if oct == 1:
+                return cls.eval(a)
+            elif oct == 2:
+                return Cos.eval(a)
+            elif oct == 3:
+                return Cos.eval(a)
+            elif oct == 4:
+                return -cls.eval(a)
+            elif oct == 5:
+                return -cls.eval(a)
+            elif oct == 6:
+                return -Cos.eval(a)
+            elif oct == 7:
+                return -Cos.eval(a)
+            elif oct == 8:
+                return cls.eval(a)
+        else:
+            if oct == 1:
+                return cls.handle_minus(a + b_mod*pi)
+            elif oct == 2:
+                return Cos.handle_minus(-a + b_mod*pi)
+            elif oct == 3:
+                return Cos.handle_minus(a + b_mod*pi)
+            elif oct == 4:
+                return cls.handle_minus(-a + b_mod*pi)
+            elif oct == 5:
+                return -cls.handle_minus(a + b_mod*pi)
+            elif oct == 6:
+                return -Cos.handle_minus(-a + b_mod*pi)
+            elif oct == 7:
+                return -Cos.handle_minus(a + b_mod*pi)
+            elif oct == 8:
+                return -cls.handle_minus(-a + b_mod*pi)
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Cos(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -254,6 +285,12 @@ class Cos(TrigFunction):
 
     def as_Sin(self):
             return Sin(pi/2 - self.args[0])
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -Sin(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -311,9 +348,8 @@ class Tan(TrigFunction):
                     assert num.args[1].args[0] == den.args[0]
                     return num.args[0] * tf.handle_minus(num.args[1].args[0])
                 elif ln == 2 and ld == 2:
-                    #print num.args[1].args[0], den.args[1].args[0]
                     assert num.args[1].args[0] == den.args[1].args[0]
-                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) / \
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) /\
                         den.args[0]
             else:
                 return num / den
@@ -323,14 +359,30 @@ class Tan(TrigFunction):
         """
         Puts any pi-shifts into the interval (0, pi/4)
         """
-        if oct == 1 or oct == 5:
-            return cls.handle_minus(a + b_mod*pi)
-        elif oct == 2 or oct == 6:
-            return Cot.handle_minus(-a + b_mod*pi)
-        elif oct == 3 or oct == 7:
-            return -Cot.handle_minus(a + b_mod*pi)
-        elif oct == 4 or oct == 8:
-            return -cls.handle_minus(-a + b_mod*pi)
+        if b_mod == 0:
+            if oct == 1 or oct == 5:
+                return cls.eval(a)
+            elif oct == 2 or oct == 6:
+                return -Cot.eval(a)
+            elif oct == 3 or oct == 7:
+                return -Cot.eval(a)
+            elif oct == 4 or oct == 8:
+                return cls.eval(a)
+        else:
+            if oct == 1 or oct == 5:
+                return cls.handle_minus(a + b_mod*pi)
+            elif oct == 2 or oct == 6:
+                return Cot.handle_minus(-a + b_mod*pi)
+            elif oct == 3 or oct == 7:
+                return -Cot.handle_minus(a + b_mod*pi)
+            elif oct == 4 or oct == 8:
+                return -cls.handle_minus(-a + b_mod*pi)
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Sec(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -373,7 +425,8 @@ class Csc(TrigFunction):
             if ld == 1:
                 return den.reciprocal.handle_minus(den.args[0])
             else:
-                return den.args[1].reciprocal.handle_minus(den.args[1].args) / den.args[0]
+                return den.args[1].reciprocal.handle_minus(den.args[1].args) / \
+                        den.args[0]
         else:
             return 1 / den
 
@@ -387,7 +440,14 @@ class Csc(TrigFunction):
         if ld == 1:
             return den.reciprocal.handle_minus(den.args[0])
         else:
-            return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
+            return den.args[1].reciprocal.handle_minus(den.args[1])\
+                    / den.args[0]
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -Cot(self.args[0])*Csc(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -430,7 +490,8 @@ class Sec(TrigFunction):
             if ld == 1:
                 return den.reciprocal.handle_minus(den.args[0])
             else:
-                return den.args[1].reciprocal.handle_minus(den.args[1].args) / den.args[0]
+                return den.args[1].reciprocal.handle_minus(den.args[1].args) \
+                        / den.args[0]
         else:
             return 1 / den
 
@@ -444,7 +505,14 @@ class Sec(TrigFunction):
         if ld == 1:
             return den.reciprocal.handle_minus(den.args[0])
         else:
-            return den.args[1].reciprocal.handle_minus(den.args[1]) / den.args[0]
+            return den.args[1].reciprocal.handle_minus(den.args[1]) / \
+                    den.args[0]
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Tan(self.args[0])*Sec(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -505,7 +573,7 @@ class Cot(TrigFunction):
                     return num.args[0] * tf.handle_minus(num.args[1].args[0])
                 elif ln == 2 and ld == 2:
                     assert num.args[1].args[0] == den.args[1].args[0]
-                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) / \
+                    return num.args[0] * tf.handle_minus(num.args[1].args[0]) /\
                         den.args[0]
             else:
                 return num / den
@@ -523,6 +591,12 @@ class Cot(TrigFunction):
             return -Tan.handle_minus(a + b_mod*pi)
         elif oct == 4 or oct == 8:
             return -cls.handle_minus(-a + b_mod*pi)
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -Csc(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def handle_inverse_trig(cls, arg, argtype):
@@ -547,7 +621,7 @@ class Cot(TrigFunction):
     @classmethod
     def hyper(cls):
         return Coth
-
+"""
 def Sinh(a):
     pass
 
@@ -557,23 +631,33 @@ def Cosh(a):
 def Tanh(a):
     pass
 
-def Coth(a):
+def Csch(a):
     pass
 
 def Sech(a):
     pass
 
-def Csch(a):
+def Coth(a):
     pass
 
-# pi/2-x symmetry:
-conjugates = {
-    Sin: Cos,
-    Cos: Sin,
-    Tan: Cot,
-    Cot: Tan,
-    }
+def ASinh(a):
+    pass
 
+def ACosh(a):
+    pass
+
+def ATanh(a):
+    pass
+
+def ACsch(a):
+    pass
+
+def ASech(a):
+    pass
+
+def ACoth(a):
+    pass
+"""
 def get_pi_shift(arg):
     """
     If arg = a + b*pi, returns (a, b), otherwise None.
@@ -595,7 +679,7 @@ def get_pi_shift(arg):
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
-class ASin(Function):
+class ASin(InverseTrigFunction):
     """
     Usage
     =====
@@ -692,7 +776,7 @@ class ASin(Function):
         import sage.all as sage
         return sage.asin(self.args[0]._sage_())
 
-class ACos(Function):
+class ACos(InverseTrigFunction):
     """
     Usage
     =====
@@ -779,7 +863,7 @@ class ACos(Function):
         import sage.all as sage
         return sage.acos(self.args[0]._sage_())
 
-class ATan(Function):
+class ATan(InverseTrigFunction):
     """
     Usage
     =====
@@ -865,7 +949,7 @@ class ATan(Function):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
 
-class ACsc(Function):
+class ACsc(InverseTrigFunction):
     """
     Usage
     =====
@@ -949,7 +1033,7 @@ class ACsc(Function):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
 
-class ASec(Function):
+class ASec(InverseTrigFunction):
     """
     Usage
     =====
@@ -1033,7 +1117,7 @@ class ASec(Function):
         import sage.all as sage
         return sage.acot(self.args[0]._sage_())
 
-class ACot(Function):
+class ACot(InverseTrigFunction):
     """
     Usage
     =====
@@ -1131,11 +1215,11 @@ atan = ATan
 acsc = ACsc
 asec = ASec
 acot = ACot
-sinh = Sinh
-cosh = Cosh
-tanh = Tanh
-coth = Coth
-sech = Sech
+#sinh = Sinh
+#cosh = Cosh
+#tanh = Tanh
+#coth = Coth
+#sech = Sech
 #acsch = ACsch
 #asinh = ASinh
 #acosh = ACosh
@@ -1153,93 +1237,76 @@ def test_get_pi_shift():
     assert get_pi_shift(y) == (y, 0)
     assert get_pi_shift(x + y) == (x+y, 0)
 
-def test_sin():
-    x, y, n = symbols('x y n')
-    assert sin(-y) == -sin(y)
-    assert sin(pi - y) == sin(y)
-    assert sin(pi + y) == -sin(y)
-    assert sin(2*pi - y) == -sin(y)
-    assert sin(pi/2 + y) == cos(y)
-    assert sin(pi/2 - y) == cos(y)
+
+# Need to test 4 cases of for all trig functions, e.g. sin(a + b*pi):
+# Case 1) a == 0 and b == 0
+# Case 2) a != 0 and b == 0
+# Case 3) a == 0 and b != 0
+# Case 4) a != 0 and b != 0
+def test_sin_case1():
     assert sin(0) == 0
-    assert sin(pi/6) == S(1)/2
-    assert sin(pi/4) == 1/sqrt(2)
-    assert sin(pi/3) == sqrt(3)/2
-    assert sin(pi/2) == 1
 
-    assert sin(-y + 2*pi) == -sin(y)
-    assert sin(pi - y + 2*pi) == sin(y)
-    assert sin(pi + y + 2*pi) == -sin(y)
-    assert sin(2*pi - y + 2*pi) == -sin(y)
-    assert sin(pi/2 + y + 2*pi) == cos(y)
-    assert sin(pi/2 - y + 2*pi) == cos(y)
-    assert sin(0 + 2*pi) == 0
-    assert sin(pi/6 + 2*pi) == S(1)/2
-    assert sin(pi/4 + 2*pi) == 1/sqrt(2)
-    assert sin(pi/3 + 2*pi) == sqrt(3)/2
-    assert sin(pi/2 + 2*pi) == 1
-
-    assert sin(-y + 4*pi) == -sin(y)
-    assert sin(pi - y + 4*pi) == sin(y)
-    assert sin(pi + y + 4*pi) == -sin(y)
-    assert sin(2*pi - y + 4*pi) == -sin(y)
-    assert sin(pi/2 + y + 4*pi) == cos(y)
-    assert sin(pi/2 - y + 4*pi) == cos(y)
-    assert sin(0 + 4*pi) == 0
-    assert sin(pi/6 + 4*pi) == S(1)/2
-    assert sin(pi/4 + 4*pi) == 1/sqrt(2)
-    assert sin(pi/3 + 4*pi) == sqrt(3)/2
-    assert sin(pi/2 + 4*pi) == 1
-
-    assert sin(3*pi/2) == -1
-    assert sin(5*pi/2) == 1
-
-    assert sin(x - 15*pi/8) == sin(x + pi/8)
-    assert sin(x + 3*pi/8) == cos(pi/8 - x)
-    assert sin(x - 13*pi/8) == sin(x - 13*pi/8)
-    assert sin(x + 5*pi/8) == cos(x + pi/8)
-    assert sin(x - 11*pi/8) == cos(x + pi/8)
-    assert sin(x + 7*pi/8) == sin(pi/8 - x)
-    assert sin(x - 9*pi/8) == sin(pi/8 - x)
-    assert sin(x + 9*pi/8) == -sin(x + pi/8)
-    assert sin(x - 7*pi/8) == -sin(x + pi/8)
-    assert sin(x + 11*pi/8) == -cos(pi/8 - x)
-    assert sin(x - 5*pi/8) == -cos(pi/8 - x)
-    assert sin(x + 13*pi/8) == -cos(x + pi/8)
-    assert sin(x - 3*pi/8) == -cos(x + pi/8)
-    assert sin(x + 15*pi/8) == -sin(pi/8 - x)
-    assert sin(x - pi/8) == -sin(pi/8 - x)
-
-    x, y = symbols('xy')
-
+def test_sin_case2():
+    x, y, n = symbols('x y n')
     r = Symbol('r', real=True)
-
     k = Symbol('k', integer=True)
+    #assert sin(r).is_real == True
 
+    assert sin(exp(10)-1) == sin(-1+exp(10))
     assert sin(S.NaN) == S.NaN
 
     #assert sin(oo*I) == oo*I
     #assert sin(-oo*I) == -oo*I
 
-    assert sin(0) == 0
-
-    assert sin(1) == sin(1)
-    assert sin(-1) == -sin(1)
-
     assert sin(x) == sin(x)
     assert sin(-x) == -sin(x)
 
-    #assert sin(asin(x)) == x
-    #assert sin(atan(x)) == x / sqrt(1 + x**2)
-    #assert sin(acos(x)) == sqrt(1 - x**2)
-    #assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
+    assert sin(-y) == -sin(y)
 
+    assert sin(asin(x)) == x
+    assert sin(acos(x)) == sqrt(1 - x**2)
+    assert sin(atan(x)) == x/sqrt(1 + x**2)
+    assert sin(acsc(x)) == 1/x
+    assert sin(asec(x)) == sqrt(1 - 1/x**2)
+    assert sin(acot(x)) == 1 / (x*sqrt(1 + 1 / x**2))
     #assert sin(pi*I) == sinh(pi)*I
     #assert sin(-pi*I) == -sinh(pi)*I
 
     assert sin(2**1024 * E) == sin(2**1024 * E)
     assert sin(-2**1024 * E) == -sin(2**1024 * E)
 
+
+    assert sin(2 + 3*I) == sin(2 + 3*I)
+
+    #assert sin(x*I) == sinh(x)*I
+
+def test_sin_case3():
+    x, y, n = symbols('x y n')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert sin(k*pi) == 0
+    assert sin(17*k*pi) == 0
+
+    #assert sin(k*pi*I) == sinh(k*pi)*I
+    assert sin(pi/6) == S(1)/2
+    assert sin(pi/4) == 1/sqrt(2)
+    assert sin(pi/3) == sqrt(3)/2
+    assert sin(pi/2) == 1
+    assert sin(0 + 4*pi) == 0
+    assert sin(pi/6 + 4*pi) == S(1)/2
+    assert sin(pi/4 + 4*pi) == 1/sqrt(2)
+    assert sin(pi/3 + 4*pi) == sqrt(3)/2
+    assert sin(pi/2 + 4*pi) == 1
+
+    assert sin(0 + 2*pi) == 0
+    assert sin(pi/6 + 2*pi) == S(1)/2
+    assert sin(pi/4 + 2*pi) == 1/sqrt(2)
+    assert sin(pi/3 + 2*pi) == sqrt(3)/2
+    assert sin(pi/2 + 2*pi) == 1
+    assert sin(3*pi/2) == -1
+    assert sin(5*pi/2) == 1
+    assert sin(1) == sin(1)
+    assert sin(-1) == -sin(1)
     assert sin(pi) == 0
     assert sin(-pi) == 0
     assert sin(2*pi) == 0
@@ -1254,7 +1321,6 @@ def test_sin():
 
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(-2*pi/3) == -S.Half*sqrt(3)
-
     assert sin(pi/4) == S.Half*sqrt(2)
     assert sin(-pi/4) == -S.Half*sqrt(2)
     assert sin(17*pi/4) == S.Half*sqrt(2)
@@ -1298,19 +1364,6 @@ def test_sin():
     assert sin(-104*pi/105) == -sin(pi/105)
     assert sin(-106*pi/105) == sin(pi/105)
 
-    assert sin(2 + 3*I) == sin(2 + 3*I)
-
-    #assert sin(x*I) == sinh(x)*I
-
-    assert sin(k*pi) == 0
-    assert sin(17*k*pi) == 0
-
-    #assert sin(k*pi*I) == sinh(k*pi)*I
-
-    #assert sin(r).is_real == True
-
-    assert sin(exp(10)-1) == sin(-1+exp(10))
-
     assert sin(1*pi/9) == sin(pi/9)
     assert sin(2*pi/9) == sin(2*pi/9)
     assert sin(3*pi/9) == sqrt(3)/2
@@ -1348,6 +1401,46 @@ def test_sin():
     assert sin(-16*pi/9) == sin(2*pi/9)
     assert sin(-17*pi/9) == sin(pi/9)
     assert sin(-18*pi/9) == 0
+
+def test_sin_case4():
+    x, y, n = symbols('x y n')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert sin(-y + 2*pi) == -sin(y)
+    assert sin(pi - y + 2*pi) == sin(y)
+    assert sin(pi + y + 2*pi) == -sin(y)
+    assert sin(2*pi - y + 2*pi) == -sin(y)
+    assert sin(pi/2 + y + 2*pi) == cos(y)
+    assert sin(pi/2 - y + 2*pi) == cos(y)
+
+    assert sin(-y + 4*pi) == -sin(y)
+    assert sin(pi - y + 4*pi) == sin(y)
+    assert sin(pi + y + 4*pi) == -sin(y)
+    assert sin(2*pi - y + 4*pi) == -sin(y)
+    assert sin(pi/2 + y + 4*pi) == cos(y)
+    assert sin(pi/2 - y + 4*pi) == cos(y)
+
+    assert sin(x - 15*pi/8) == sin(x + pi/8)
+    assert sin(x + 3*pi/8) == cos(pi/8 - x)
+    assert sin(x - 13*pi/8) == sin(x - 13*pi/8)
+    assert sin(x + 5*pi/8) == cos(x + pi/8)
+    assert sin(x - 11*pi/8) == cos(x + pi/8)
+    assert sin(x + 7*pi/8) == sin(pi/8 - x)
+    assert sin(x - 9*pi/8) == sin(pi/8 - x)
+    assert sin(x + 9*pi/8) == -sin(x + pi/8)
+    assert sin(x - 7*pi/8) == -sin(x + pi/8)
+    assert sin(x + 11*pi/8) == -cos(pi/8 - x)
+    assert sin(x - 5*pi/8) == -cos(pi/8 - x)
+    assert sin(x + 13*pi/8) == -cos(x + pi/8)
+    assert sin(x - 3*pi/8) == -cos(x + pi/8)
+    assert sin(x + 15*pi/8) == -sin(pi/8 - x)
+    assert sin(x - pi/8) == -sin(pi/8 - x)
+    assert sin(pi - y) == sin(y)
+    assert sin(pi + y) == -sin(y)
+    assert sin(2*pi - y) == -sin(y)
+    assert sin(pi/2 + y) == cos(y)
+    assert sin(pi/2 - y) == cos(y)
+
 
 def test_cos():
     n, x, y = symbols('n x y')
