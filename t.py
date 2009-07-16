@@ -1441,91 +1441,51 @@ def test_sin_case4():
     assert sin(pi/2 + y) == cos(y)
     assert sin(pi/2 - y) == cos(y)
 
-
-def test_cos():
-    n, x, y = symbols('n x y')
-
-    r = Symbol('r', real=True)
-
-    k = Symbol('k', integer=True)
-    assert cos(-y) == cos(y)
-    assert cos(pi - y) == -cos(y)
-    assert cos(pi + y) == -cos(y)
-    assert cos(2*pi - y) == cos(y)
-    assert cos(pi/2 + y) == -sin(y)
-    assert cos(pi/2 - y) == sin(y)
+def test_cos_case1():
     assert cos(0) == 1
-    assert cos(pi/6) == sqrt(3)/2
-    assert cos(pi/4) == 1/sqrt(2)
-    assert cos(pi/3) == 1/S(2)
-    assert cos(pi/2) == 0
 
-    assert cos(-y + 2*pi) == cos(y)
-    assert cos(pi - y + 2*pi) == -cos(y)
-    assert cos(pi + y + 2*pi) == -cos(y)
-    assert cos(2*pi - y + 2*pi) == cos(y)
-    assert cos(pi/2 + y + 2*pi) == -sin(y)
-    assert cos(pi/2 - y + 2*pi) == sin(y)
-    assert cos(0 + 2*pi) == 1
-    assert cos(pi/6 + 2*pi) == sqrt(3)/2
-    assert cos(pi/4 + 2*pi) == 1/sqrt(2)
-    assert cos(pi/3 + 2*pi) == 1/S(2)
-    assert cos(pi/2 + 2*pi) == 0
-
-    assert cos(pi) == -1
-    assert cos(8*pi) == 1
-    assert cos(-9*pi) == -1
-    assert cos(3*pi/2) == 0
-    assert cos(11*pi/2) == 0
-    assert cos(pi/12) == (1 + sqrt(3)) / (2 * sqrt(2))
-
-    assert cos(x - 15*pi/8) == cos(x + pi/8)
-    assert cos(x + 3*pi/8) == sin(pi/8 - x)
-    assert cos(x - 13*pi/8) == sin(pi/8 - x)
-    assert cos(x + 5*pi/8) == -sin(x + pi/8)
-    assert cos(x - 11*pi/8) == -sin(x + pi/8)
-    assert cos(x + 7*pi/8) == -cos(pi/8 - x)
-    assert cos(x - 9*pi/8) == -cos(pi/8 - x)
-    assert cos(x + 9*pi/8) == -cos(x + pi/8)
-    assert cos(x - 7*pi/8) == -cos(x + pi/8)
-    assert cos(x + 11*pi/8) == sin(x - pi/8)
-    assert cos(x - 5*pi/8) == sin(x - pi/8)
-    assert cos(x + 13*pi/8) == sin(x + pi/8)
-    assert cos(x - 3*pi/8) == sin(x + pi/8)
-    assert cos(x + 15*pi/8) == cos(pi/8 - x)
-    assert cos(x - pi/8) == cos(pi/8 - x)
-
-    assert cos(nan) == nan
+def test_cos_case2():
+    n, x, y = symbols('n x y')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert cos(2 + 3*I) == cos(2 + 3*I)
+    #assert cos(x*I) == cosh(x)
+    #assert cos(r).is_real == True
+    assert cos(exp(10)-1) == cos(-1+exp(10))
     # TODO implement cosh
     #assert cos(oo*I) == oo
     #assert cos(-oo*I) == oo
 
-    assert cos(0) == 1
-
-    assert cos(1) == cos(1)
-    assert cos(-1) == cos(1)
-
-    assert cos(x) == cos(x)
-    assert cos(-x) == cos(x)
     # TODO implement acos, atanh, asin, acot
-    #assert cos(acos(x)) == x
-    #assert cos(atan(x)) == 1 / sqrt(1 + x**2)
-    #assert cos(asin(x)) == sqrt(1 - x**2)
-    #assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(acos(x)) == x
+    assert cos(atan(x)) == 1 / sqrt(1 + x**2)
+    assert cos(asin(x)) == sqrt(1 - x**2)
+    assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
 
     #assert cos(pi*I) == cosh(pi)
     #assert cos(-pi*I) == cosh(pi)
 
     assert cos(2**1024 * E) == cos(2**1024 * E)
     assert cos(-2**1024 * E) == cos(2**1024 * E)
+    assert cos(1) == cos(1)
+    assert cos(-y) == cos(y)
+    assert cos(nan) == nan
+    assert cos(-1) == cos(1)
+    assert cos(x) == cos(x)
+    assert cos(-x) == cos(x)
 
-    assert cos(pi/2) == 0
-    assert cos(-pi/2) == 0
+def test_cos_case3():
+    n, x, y = symbols('n x y')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert cos(k*pi) == cos(k*pi)
+    assert cos(17*k*pi) == cos(17*k*pi)
+
+    #assert cos(k*pi*I) == cosh(k*pi)
     assert cos(pi/2) == 0
     assert cos(-pi/2) == 0
     assert cos((-3*10**73+1)*pi/2) == 0
     assert cos((7*10**103+1)*pi/2) == 0
-
     assert cos(pi) == -1
     assert cos(-pi) == -1
     assert cos(2*pi)==1
@@ -1576,19 +1536,52 @@ def test_cos():
 
     assert cos(-104*pi/105) == -cos(pi/105)
     assert cos(-106*pi/105) == -cos(pi/105)
+    assert cos(pi) == -1
+    assert cos(8*pi) == 1
+    assert cos(-9*pi) == -1
+    assert cos(3*pi/2) == 0
+    assert cos(11*pi/2) == 0
+    assert cos(pi/12) == (1 + sqrt(3)) / (2 * sqrt(2))
+    assert cos(pi/6) == sqrt(3)/2
+    assert cos(pi/4) == 1/sqrt(2)
+    assert cos(pi/3) == 1/S(2)
+    assert cos(pi/2) == 0
+    assert cos(0 + 2*pi) == 1
+    assert cos(pi/6 + 2*pi) == sqrt(3)/2
+    assert cos(pi/4 + 2*pi) == 1/sqrt(2)
+    assert cos(pi/3 + 2*pi) == 1/S(2)
+    assert cos(pi/2 + 2*pi) == 0
 
-    assert cos(2 + 3*I) == cos(2 + 3*I)
-
-    #assert cos(x*I) == cosh(x)
-
-    assert cos(k*pi) == cos(k*pi)
-    assert cos(17*k*pi) == cos(17*k*pi)
-
-    #assert cos(k*pi*I) == cosh(k*pi)
-
-    #assert cos(r).is_real == True
-
-    assert cos(exp(10)-1) == cos(-1+exp(10))
+def test_cos_case4():
+    n, x, y = symbols('n x y')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert cos(pi - y) == -cos(y)
+    assert cos(pi + y) == -cos(y)
+    assert cos(2*pi - y) == cos(y)
+    assert cos(pi/2 + y) == -sin(y)
+    assert cos(pi/2 - y) == sin(y)
+    assert cos(x - 15*pi/8) == cos(x + pi/8)
+    assert cos(x + 3*pi/8) == sin(pi/8 - x)
+    assert cos(x - 13*pi/8) == sin(pi/8 - x)
+    assert cos(x + 5*pi/8) == -sin(x + pi/8)
+    assert cos(x - 11*pi/8) == -sin(x + pi/8)
+    assert cos(x + 7*pi/8) == -cos(pi/8 - x)
+    assert cos(x - 9*pi/8) == -cos(pi/8 - x)
+    assert cos(x + 9*pi/8) == -cos(x + pi/8)
+    assert cos(x - 7*pi/8) == -cos(x + pi/8)
+    assert cos(x + 11*pi/8) == sin(x - pi/8)
+    assert cos(x - 5*pi/8) == sin(x - pi/8)
+    assert cos(x + 13*pi/8) == sin(x + pi/8)
+    assert cos(x - 3*pi/8) == sin(x + pi/8)
+    assert cos(x + 15*pi/8) == cos(pi/8 - x)
+    assert cos(x - pi/8) == cos(pi/8 - x)
+    assert cos(-y + 2*pi) == cos(y)
+    assert cos(pi - y + 2*pi) == -cos(y)
+    assert cos(pi + y + 2*pi) == -cos(y)
+    assert cos(2*pi - y + 2*pi) == cos(y)
+    assert cos(pi/2 + y + 2*pi) == -sin(y)
+    assert cos(pi/2 - y + 2*pi) == sin(y)
 
 
 def test_tan():
