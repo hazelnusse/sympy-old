@@ -1,7 +1,11 @@
 from sympy import (Symbol, pi, S, Basic, Function, solve, latex, sqrt, sympify,
-        var, Wild, symbols, floor, Rational, I, E, zoo, exp, nan)
+        var, Wild, symbols, floor, Rational, I, E, zoo, oo, exp, nan)
 from sympy.core.cache import cacheit
 from sympy import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
+Sinh = sinh
+Cosh = cosh
+Tanh = tanh
+Coth = coth
 
 C0 = (sqrt(3)-1)/(2*sqrt(2))
 C1 = S(1)/2
@@ -75,7 +79,8 @@ class TrigFunction(Basic):
         # Case 2:  a != 0 and b == 0
         elif a != 0 and b == 0:
             if a.is_imaginary:
-                return cls.hyper(a.coeff(I))
+                print a.coeff(I)
+                return I*cls.hyper(a.coeff(I))
             elif a is S.NaN:
                 return S.NaN
             else:
@@ -84,7 +89,7 @@ class TrigFunction(Basic):
         # Case 3: a == 0 and b != 0
         elif a == 0 and b != 0:
             if b.is_imaginary:
-                return cls.hyper(b.coeff(I))
+                return I*cls.hyper(b.coeff(I)*pi)
             else:
                 return cls.eval_direct(b)
 
@@ -262,8 +267,11 @@ class Sin(TrigFunction):
         return Csc
 
     @classmethod
-    def hyper(cls):
-        return Sinh
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Sinh(coef)
 
 class Cos(TrigFunction):
     odd = False
@@ -302,7 +310,7 @@ class Cos(TrigFunction):
         elif argtype == ATan:
             return 1 / sqrt(1 + x**2)
         elif argtype == ACsc:
-            return 1 / sqrt(1 - 1 / x**2)
+            return sqrt(1 - 1 / x**2)
         elif argtype == ASec:
             return 1 / x
         elif argtype == ACot:
@@ -313,8 +321,11 @@ class Cos(TrigFunction):
         return Sec
 
     @classmethod
-    def hyper(cls):
-        return Cosh
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Cosh(coef)
 
 class Tan(TrigFunction):
     odd = True
@@ -405,8 +416,11 @@ class Tan(TrigFunction):
         return Cot
 
     @classmethod
-    def hyper(cls):
-        return Tanh
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Tanh(coef)
 
 class Csc(TrigFunction):
     odd = True
@@ -470,8 +484,11 @@ class Csc(TrigFunction):
         return Sin
 
     @classmethod
-    def hyper(cls):
-        return Csch
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Csch(coef)
 
 class Sec(TrigFunction):
     odd = False
@@ -535,8 +552,11 @@ class Sec(TrigFunction):
         return Cos
 
     @classmethod
-    def hyper(cls):
-        return Sech
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Sech(coef)
 
 class Cot(TrigFunction):
     odd = True
@@ -619,8 +639,12 @@ class Cot(TrigFunction):
         return Tan
 
     @classmethod
-    def hyper(cls):
-        return Coth
+    def hyper(cls, coef):
+        """
+        Called when argument is imaginary.
+        """
+        return Coth(coef)
+
 """
 def Sinh(a):
     pass
@@ -658,6 +682,7 @@ def ASech(a):
 def ACoth(a):
     pass
 """
+
 def get_pi_shift(arg):
     """
     If arg = a + b*pi, returns (a, b), otherwise None.
@@ -665,6 +690,19 @@ def get_pi_shift(arg):
     a = Wild("a", exclude=[pi])
     b = Wild("b", exclude=[pi])
     r = arg.match(a+b*pi)
+    # I think it should always match:
+    if r is None:
+        return arg, S(0)
+    else:
+        return sympify(r.get(a, 0)), sympify(r.get(b, 0))
+
+def get_imag_coef(arg):
+    """
+    If arg = a + b*I, returns (a, b), otherwise None.
+    """
+    a = Wild("a", exclude=[I])
+    b = Wild("b", exclude=[I])
+    r = arg.match(a+b*I)
     # I think it should always match:
     if r is None:
         return arg, S(0)
@@ -1269,6 +1307,14 @@ def test_sin_case2():
     assert sin(acsc(x)) == 1/x
     assert sin(asec(x)) == sqrt(1 - 1/x**2)
     assert sin(acot(x)) == 1 / (x*sqrt(1 + 1 / x**2))
+    assert sin(-asin(x)) == -x
+    assert sin(asin(-x)) == -x
+    assert sin(-acos(x)) == -sqrt(1 - x**2)
+    assert sin(-atan(x)) == -x/sqrt(1 + x**2)
+    assert sin(-acsc(x)) == -1/x
+    assert sin(-asec(x)) == -sqrt(1 - 1/x**2)
+    assert sin(-acot(x)) == -1 / (x*sqrt(1 + 1 / x**2))
+
     #assert sin(pi*I) == sinh(pi)*I
     #assert sin(-pi*I) == -sinh(pi)*I
 
@@ -1456,11 +1502,20 @@ def test_cos_case2():
     #assert cos(oo*I) == oo
     #assert cos(-oo*I) == oo
 
-    # TODO implement acos, atanh, asin, acot
+    assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acos(x)) == x
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
-    assert cos(asin(x)) == sqrt(1 - x**2)
+    assert cos(acsc(x)) == sqrt(1 - 1 / x**2)
+    assert cos(asec(x)) == 1 / x
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
+    assert cos(-asin(x)) == sqrt(1 - x**2)
+    assert cos(asin(-x)) == sqrt(1 - x**2)
+    assert cos(-asin(x)) == sqrt(1 - x**2)
+    assert cos(-acos(x)) == x
+    assert cos(-atan(x)) == 1 / sqrt(1 + x**2)
+    assert cos(-acsc(x)) == sqrt(1 - 1 / x**2)
+    assert cos(-asec(x)) == 1 / x
+    assert cos(-acot(x)) == 1 / sqrt(1 + 1 / x**2)
 
     #assert cos(pi*I) == cosh(pi)
     #assert cos(-pi*I) == cosh(pi)
@@ -1583,50 +1638,59 @@ def test_cos_case4():
     assert cos(pi/2 + y + 2*pi) == -sin(y)
     assert cos(pi/2 - y + 2*pi) == sin(y)
 
-
-def test_tan():
-    var("x y n")
-    assert tan(-y) == -tan(y)
-    assert tan(pi - y) == -tan(y)
-    assert tan(pi + y) == tan(y)
-    assert tan(2*pi - y) == -tan(y)
-    assert tan(pi/2 + y) == -cot(y)
-    assert tan(pi/2 - y) == cot(y)
+# Case 1) a == 0 and b == 0
+def test_tan_case1():
     assert tan(0) == 0
+
+# Case 2) a != 0 and b == 0
+def test_tan_case2():
+    var("x y n")
+    x, y = symbols('xy')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert tan(2**1024 * E) == tan(2**1024 * E)
+    assert tan(-2**1024 * E) == -tan(2**1024 * E)
+    assert tan(2 + 3*I) == tan(2 + 3*I)
+    #assert tan(r).is_real == True
+    assert tan(nan) == nan
+
+    assert tan(oo*I) == I
+    assert tan(-oo*I) == -I
+
+    assert tan(1) == tan(1)
+    assert tan(-1) == -tan(1)
+
+    assert tan(x) == tan(x)
+    assert tan(-x) == -tan(x)
+
+    assert tan(asin(x)) == x / sqrt(1 - x**2)
+    assert tan(acos(x)) == sqrt(1 - x**2) / x
+    assert tan(atan(x)) == x
+    assert tan(acot(x)) == 1 / x
+    assert tan(-y) == -tan(y)
+
+    x = Symbol('x', real=True)
+    assert tan(x*I) == tanh(x)*I
+
+# Case 3) a == 0 and b != 0
+def test_tan_case3():
+    x, y = symbols('xy')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert tan(k*pi) == 0
+    assert tan(pi*I) == tanh(pi)*I
+    assert tan(-pi*I) == -tanh(pi)*I
+    assert tan(17*k*pi) == 0
+    assert tan(k*pi*I) == tanh(k*pi)*I
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(pi/4) == 1
     assert tan(pi/3) == sqrt(3)
     assert tan(pi/2) == zoo
-
-    assert tan(-y + pi) == -tan(y)
-    assert tan(pi - y + pi) == -tan(y)
-    assert tan(pi + y + pi) == tan(y)
-    assert tan(2*pi - y + pi) == -tan(y)
-    assert tan(pi/2 + y + pi) == -cot(y)
-    assert tan(pi/2 - y + pi) == cot(y)
     assert tan(0 + pi) == 0
     assert tan(pi/6 + pi) == 1/sqrt(3)
     assert tan(pi/4 + pi) == 1
     assert tan(pi/3 + pi) == sqrt(3)
-
     assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
-
-    assert tan(x - 15*pi/8) == tan(x + pi/8)
-    assert tan(x + 3*pi/8) == cot(pi/8 - x)
-    assert tan(x - 13*pi/8) == cot(pi/8 - x)
-    assert tan(x + 5*pi/8) == -cot(x + pi/8)
-    assert tan(x - 11*pi/8) == -cot(x + pi/8)
-    assert tan(x + 7*pi/8) == -tan(pi/8 - x)
-    assert tan(x - 9*pi/8) == -tan(pi/8 - x)
-    assert tan(x + 9*pi/8) == tan(x + pi/8)
-    assert tan(x - 7*pi/8) == tan(x + pi/8)
-    assert tan(x + 11*pi/8) == cot(pi/8 - x)
-    assert tan(x - 5*pi/8) == cot(pi/8 - x)
-    assert tan(x + 13*pi/8) == -cot(x + pi/8)
-    assert tan(x - 3*pi/8) == -cot(x + pi/8)
-    assert tan(x + 15*pi/8) == -tan(pi/8 - x)
-    assert tan(x - pi/8) == -tan(pi/8 - x)
-
     assert Tan(-16*pi/16) == 0
     assert Tan(-15*pi/16) == Tan(pi/16)
     assert Tan(-14*pi/16) == Tan(pi/8)
@@ -1660,6 +1724,65 @@ def test_tan():
     assert Tan(14*pi/16) == -Tan(pi/8)
     assert Tan(15*pi/16) == -Tan(pi/16)
     assert Tan(16*pi/16) == 0
+    assert tan(pi) == 0
+    assert tan(-pi) == 0
+    assert tan(2*pi) == 0
+    assert tan(-2*pi) == 0
+    assert tan(-3*10**73*pi) == 0
+    assert tan(7*10**103*pi) == 0
+    assert tan(pi/2) == tan(pi/2)
+    assert tan(-pi/2) == -tan(pi/2)
+    assert tan(5*pi/2) == tan(5*pi/2)
+    assert tan(7*pi/2) == tan(7*pi/2)
+
+    assert tan(pi/3) == sqrt(3)
+    assert tan(-2*pi/3) == sqrt(3)
+
+    assert tan(pi/4) == S.One
+    assert tan(-pi/4) == -S.One
+    assert tan(17*pi/4) == S.One
+    assert tan(-3*pi/4) == S.One
+
+    assert tan(pi/6) == 1/sqrt(3)
+    assert tan(-pi/6) == -1/sqrt(3)
+    assert tan(7*pi/6) == 1/sqrt(3)
+    assert tan(-5*pi/6) == 1/sqrt(3)
+
+    assert tan(pi/105) == tan(pi/105)
+    assert tan(-pi/105) == -tan(pi/105)
+
+# Case 4) a != 0 and b != 0
+def test_tan_case4():
+    x, y = symbols('xy')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+
+    assert tan(pi - y) == -tan(y)
+    assert tan(pi + y) == tan(y)
+    assert tan(2*pi - y) == -tan(y)
+    assert tan(pi/2 + y) == -cot(y)
+    assert tan(pi/2 - y) == cot(y)
+    assert tan(-y + pi) == -tan(y)
+    assert tan(pi - y + pi) == -tan(y)
+    assert tan(pi + y + pi) == tan(y)
+    assert tan(2*pi - y + pi) == -tan(y)
+    assert tan(pi/2 + y + pi) == -cot(y)
+    assert tan(pi/2 - y + pi) == cot(y)
+    assert tan(x - 15*pi/8) == tan(x + pi/8)
+    assert tan(x + 3*pi/8) == cot(pi/8 - x)
+    assert tan(x - 13*pi/8) == cot(pi/8 - x)
+    assert tan(x + 5*pi/8) == -cot(x + pi/8)
+    assert tan(x - 11*pi/8) == -cot(x + pi/8)
+    assert tan(x + 7*pi/8) == -tan(pi/8 - x)
+    assert tan(x - 9*pi/8) == -tan(pi/8 - x)
+    assert tan(x + 9*pi/8) == tan(x + pi/8)
+    assert tan(x - 7*pi/8) == tan(x + pi/8)
+    assert tan(x + 11*pi/8) == cot(pi/8 - x)
+    assert tan(x - 5*pi/8) == cot(pi/8 - x)
+    assert tan(x + 13*pi/8) == -cot(x + pi/8)
+    assert tan(x - 3*pi/8) == -cot(x + pi/8)
+    assert tan(x + 15*pi/8) == -tan(pi/8 - x)
+    assert tan(x - pi/8) == -tan(pi/8 - x)
 
 def test_cot():
     var("x y n")

@@ -2,8 +2,12 @@ from t import *
 from sympy import S, pi, I, oo
 x = symbols('x')
 k = Symbol('k', integer=True, odd=True)
+r = get_pi_shift(oo*I)
 
-print 'assert sin(asin(-x)) ==', sin(asin(-x))
+print r
+stop
+
+print tan(oo*I)
 stop
 
 print 'assert sin(acos(x)) ==', sin(acos(x))
