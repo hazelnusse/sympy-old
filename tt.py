@@ -1,6 +1,16 @@
 from t import *
 from sympy import S, pi, I, oo
-x = symbols('x')
+print (sqrt(5)-1)/4
+print 4/(sqrt(5)-1)
+print sin(pi/10)
+assert csc(pi/10) == 1/sin(pi/10)
+assert sin(pi/10) == 1/csc(pi/10)
+stop
+
+x = symbols('x', real=True)
+print cos(oo*I)
+stop
+
 k = Symbol('k', integer=True, odd=True)
 r = get_pi_shift(oo*I)
 
@@ -8,8 +18,6 @@ print r
 stop
 
 print tan(oo*I)
-stop
-
 print 'assert sin(acos(x)) ==', sin(acos(x))
 print 'assert sin(atan(x)) ==', sin(atan(x))
 print 'assert sin(acsc(x)) ==', sin(acsc(x))

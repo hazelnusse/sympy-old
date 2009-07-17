@@ -1103,6 +1103,212 @@ class atan(Function):
         import sage.all as sage
         return sage.atan(self.args[0]._sage_())
 
+class acsc(Function):
+    """
+    Usage
+    =====
+      acsc(x) -> Returns the arc cosecant of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return - 1 / (sqrt(1 - self.args[0]**2) * x**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    @deprecated
+    def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S.Zero
+            elif arg is S.Zero:
+                return zoo
+            elif arg is S.One:
+                return S.Pi / 2
+            elif arg is S.NegativeOne:
+                return -S.Pi / 2
+
+        if arg.is_number:
+            cst_table = {
+                S(2)     : 6,
+                -S(2)    : -6,
+                2/sqrt(2)  : 4,
+                -2/sqrt(2) : -4,
+                sqrt(2)  : 4,
+                -sqrt(2) : -4,
+                2/sqrt(3)  : 3,
+                -2/sqrt(3) : -3,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * C.asinh(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        # Not sure about all of this business
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * (n-2)**2/(k*(k-1)) * x**2
+            else:
+                k = (n - 1) // 2
+
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
+
+                return R / F * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.asin(self.args[0]._sage_())
+
+class asec(Function):
+    """
+    Usage
+    =====
+      asec(x) -> Returns the arc secant of x (measured in radians)
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1 / (sqrt(1 - self.args[0]**2) * x**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
+    @deprecated
+    def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi / 2
+            elif arg is S.NegativeInfinity:
+                return S.Pi / 2
+            elif arg is S.Zero:
+                return zoo
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi
+
+        if arg.is_number:
+            cst_table = {
+                S(2)     : S(3),
+                -S(2)    : S(3)/2,
+                2/sqrt(2)  : S(4),
+                -2/sqrt(2) : S(4)/3,
+                sqrt(2)  : S(4),
+                -sqrt(2) : S(4)/3,
+                2/sqrt(3)  : S(6),
+                -2/sqrt(3) : S(6)/5,
+                }
+
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * C.asinh(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -cls(-arg)
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+    # Not sure about all of this business
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * (n-2)**2/(k*(k-1)) * x**2
+            else:
+                k = (n - 1) // 2
+
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
+
+                return R / F * x**n / n
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if C.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.asin(self.args[0]._sage_())
+
 class acot(Function):
     """
     Usage

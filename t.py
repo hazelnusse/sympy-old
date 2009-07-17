@@ -79,8 +79,7 @@ class TrigFunction(Basic):
         # Case 2:  a != 0 and b == 0
         elif a != 0 and b == 0:
             if a.is_imaginary:
-                print a.coeff(I)
-                return I*cls.hyper(a.coeff(I))
+                return cls.hyper(a.coeff(I))
             elif a is S.NaN:
                 return S.NaN
             else:
@@ -89,7 +88,7 @@ class TrigFunction(Basic):
         # Case 3: a == 0 and b != 0
         elif a == 0 and b != 0:
             if b.is_imaginary:
-                return I*cls.hyper(b.coeff(I)*pi)
+                return cls.hyper(b.coeff(I)*pi)
             else:
                 return cls.eval_direct(b)
 
@@ -271,7 +270,7 @@ class Sin(TrigFunction):
         """
         Called when argument is imaginary.
         """
-        return Sinh(coef)
+        return I*Sinh(coef)
 
 class Cos(TrigFunction):
     odd = False
@@ -420,7 +419,7 @@ class Tan(TrigFunction):
         """
         Called when argument is imaginary.
         """
-        return Tanh(coef)
+        return I*Tanh(coef)
 
 class Csc(TrigFunction):
     odd = True
@@ -475,9 +474,9 @@ class Csc(TrigFunction):
         elif argtype == ACsc:
             return x
         elif argtype == ASec:
-            return 1 / sqrt(1 - 1 / x**2)
+            return sqrt(1 - 1 / x**2)
         elif argtype == ACot:
-            return sqrt(1 + 1 / x**2) * x
+            return sqrt(1 + 1 / x**2)
 
     @classmethod
     def reciprocal(cls):
@@ -488,7 +487,7 @@ class Csc(TrigFunction):
         """
         Called when argument is imaginary.
         """
-        return Csch(coef)
+        return -I*Csch(coef)
 
 class Sec(TrigFunction):
     odd = False
@@ -643,7 +642,7 @@ class Cot(TrigFunction):
         """
         Called when argument is imaginary.
         """
-        return Coth(coef)
+        return -I*Coth(coef)
 
 """
 def Sinh(a):
@@ -1278,12 +1277,10 @@ def test_get_pi_shift():
 
 # Need to test 4 cases of for all trig functions, e.g. sin(a + b*pi):
 # Case 1) a == 0 and b == 0
-# Case 2) a != 0 and b == 0
-# Case 3) a == 0 and b != 0
-# Case 4) a != 0 and b != 0
 def test_sin_case1():
     assert sin(0) == 0
 
+# Case 2) a != 0 and b == 0
 def test_sin_case2():
     x, y, n = symbols('x y n')
     r = Symbol('r', real=True)
@@ -1292,7 +1289,7 @@ def test_sin_case2():
 
     assert sin(exp(10)-1) == sin(-1+exp(10))
     assert sin(S.NaN) == S.NaN
-
+    # See Issue 1540 for why these two fail:
     #assert sin(oo*I) == oo*I
     #assert sin(-oo*I) == -oo*I
 
@@ -1315,17 +1312,18 @@ def test_sin_case2():
     assert sin(-asec(x)) == -sqrt(1 - 1/x**2)
     assert sin(-acot(x)) == -1 / (x*sqrt(1 + 1 / x**2))
 
-    #assert sin(pi*I) == sinh(pi)*I
-    #assert sin(-pi*I) == -sinh(pi)*I
+    assert sin(pi*I) == sinh(pi)*I
+    assert sin(-pi*I) == -sinh(pi)*I
 
     assert sin(2**1024 * E) == sin(2**1024 * E)
     assert sin(-2**1024 * E) == -sin(2**1024 * E)
 
 
     assert sin(2 + 3*I) == sin(2 + 3*I)
+    x = Symbol('x', real=True)
+    assert sin(x*I) == sinh(x)*I
 
-    #assert sin(x*I) == sinh(x)*I
-
+# Case 3) a == 0 and b != 0
 def test_sin_case3():
     x, y, n = symbols('x y n')
     r = Symbol('r', real=True)
@@ -1333,7 +1331,7 @@ def test_sin_case3():
     assert sin(k*pi) == 0
     assert sin(17*k*pi) == 0
 
-    #assert sin(k*pi*I) == sinh(k*pi)*I
+    assert sin(k*pi*I) == sinh(k*pi)*I
     assert sin(pi/6) == S(1)/2
     assert sin(pi/4) == 1/sqrt(2)
     assert sin(pi/3) == sqrt(3)/2
@@ -1448,6 +1446,7 @@ def test_sin_case3():
     assert sin(-17*pi/9) == sin(pi/9)
     assert sin(-18*pi/9) == 0
 
+# Case 4) a != 0 and b != 0
 def test_sin_case4():
     x, y, n = symbols('x y n')
     r = Symbol('r', real=True)
@@ -1487,18 +1486,19 @@ def test_sin_case4():
     assert sin(pi/2 + y) == cos(y)
     assert sin(pi/2 - y) == cos(y)
 
+# Case 1) a == 0 and b == 0
 def test_cos_case1():
     assert cos(0) == 1
 
+# Case 2) a != 0 and b == 0
 def test_cos_case2():
     n, x, y = symbols('n x y')
     r = Symbol('r', real=True)
     k = Symbol('k', integer=True)
     assert cos(2 + 3*I) == cos(2 + 3*I)
-    #assert cos(x*I) == cosh(x)
     #assert cos(r).is_real == True
     assert cos(exp(10)-1) == cos(-1+exp(10))
-    # TODO implement cosh
+    # Issue 1540 causes these two to fail:
     #assert cos(oo*I) == oo
     #assert cos(-oo*I) == oo
 
@@ -1517,8 +1517,8 @@ def test_cos_case2():
     assert cos(-asec(x)) == 1 / x
     assert cos(-acot(x)) == 1 / sqrt(1 + 1 / x**2)
 
-    #assert cos(pi*I) == cosh(pi)
-    #assert cos(-pi*I) == cosh(pi)
+    assert cos(pi*I) == cosh(pi)
+    assert cos(-pi*I) == cosh(pi)
 
     assert cos(2**1024 * E) == cos(2**1024 * E)
     assert cos(-2**1024 * E) == cos(2**1024 * E)
@@ -1528,7 +1528,10 @@ def test_cos_case2():
     assert cos(-1) == cos(1)
     assert cos(x) == cos(x)
     assert cos(-x) == cos(x)
+    x = Symbol('x', real=True)
+    assert cos(x*I) == cosh(x)
 
+# Case 3) a == 0 and b == 0
 def test_cos_case3():
     n, x, y = symbols('n x y')
     r = Symbol('r', real=True)
@@ -1536,7 +1539,7 @@ def test_cos_case3():
     assert cos(k*pi) == cos(k*pi)
     assert cos(17*k*pi) == cos(17*k*pi)
 
-    #assert cos(k*pi*I) == cosh(k*pi)
+    assert cos(k*pi*I) == cosh(k*pi)
     assert cos(pi/2) == 0
     assert cos(-pi/2) == 0
     assert cos((-3*10**73+1)*pi/2) == 0
@@ -1607,6 +1610,7 @@ def test_cos_case3():
     assert cos(pi/3 + 2*pi) == 1/S(2)
     assert cos(pi/2 + 2*pi) == 0
 
+# Case 4) a != 0 and b != 0
 def test_cos_case4():
     n, x, y = symbols('n x y')
     r = Symbol('r', real=True)
@@ -1654,8 +1658,10 @@ def test_tan_case2():
     #assert tan(r).is_real == True
     assert tan(nan) == nan
 
-    assert tan(oo*I) == I
-    assert tan(-oo*I) == -I
+    # Bug in match is causing this to fail
+    # see Issue 1540
+    #assert tan(oo*I) == I
+    #assert tan(-oo*I) == -I
 
     assert tan(1) == tan(1)
     assert tan(-1) == -tan(1)
@@ -1666,7 +1672,16 @@ def test_tan_case2():
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
     assert tan(atan(x)) == x
+    assert tan(acsc(x)) == 1 / (sqrt(1- 1 / x**2) * x)
+    assert tan(asec(x)) == sqrt(1- 1 / x**2) * x
     assert tan(acot(x)) == 1 / x
+    assert tan(-asin(x)) == -x / sqrt(1 - x**2)
+    assert tan(asin(-x)) == -x / sqrt(1 - x**2)
+    assert tan(-acos(x)) == -sqrt(1 - x**2) / x
+    assert tan(-atan(x)) == -x
+    assert tan(-acsc(x)) == -1 / (sqrt(1- 1 / x**2) * x)
+    assert tan(-asec(x)) == -sqrt(1- 1 / x**2) * x
+    assert tan(-acot(x)) == -1 / x
     assert tan(-y) == -tan(y)
 
     x = Symbol('x', real=True)
@@ -1691,39 +1706,39 @@ def test_tan_case3():
     assert tan(pi/4 + pi) == 1
     assert tan(pi/3 + pi) == sqrt(3)
     assert tan(7*pi/12) == sin(7*pi/12)/cos(7*pi/12)
-    assert Tan(-16*pi/16) == 0
-    assert Tan(-15*pi/16) == Tan(pi/16)
-    assert Tan(-14*pi/16) == Tan(pi/8)
-    assert Tan(-13*pi/16) == Tan(3*pi/16)
-    assert Tan(-12*pi/16) == 1
-    assert Tan(-11*pi/16) == Cot(3*pi/16)
-    assert Tan(-10*pi/16) == Cot(pi/8)
-    assert Tan(-9*pi/16) == Cot(pi/16)
-    assert Tan(-8*pi/16) == zoo
-    assert Tan(-7*pi/16) == -Cot(pi/16)
-    assert Tan(-6*pi/16) == -Cot(pi/8)
-    assert Tan(-5*pi/16) == -Cot(3*pi/16)
-    assert Tan(-4*pi/16) == -1
-    assert Tan(-3*pi/16) == -Tan(3*pi/16)
-    assert Tan(-2*pi/16) == -Tan(pi/8)
-    assert Tan(-1*pi/16) == -Tan(pi/16)
-    assert Tan(0*pi/16) == 0
-    assert Tan(1*pi/16) == Tan(pi/16)
-    assert Tan(2*pi/16) == Tan(pi/8)
-    assert Tan(3*pi/16) == Tan(3*pi/16)
-    assert Tan(4*pi/16) == 1
-    assert Tan(5*pi/16) == Cot(3*pi/16)
-    assert Tan(6*pi/16) == Cot(pi/8)
-    assert Tan(7*pi/16) == Cot(pi/16)
-    assert Tan(8*pi/16) == zoo
-    assert Tan(9*pi/16) == -Cot(pi/16)
-    assert Tan(10*pi/16) == -Cot(pi/8)
-    assert Tan(11*pi/16) == -Cot(3*pi/16)
-    assert Tan(12*pi/16) == -1
-    assert Tan(13*pi/16) == -Tan(3*pi/16)
-    assert Tan(14*pi/16) == -Tan(pi/8)
-    assert Tan(15*pi/16) == -Tan(pi/16)
-    assert Tan(16*pi/16) == 0
+    assert tan(-16*pi/16) == 0
+    assert tan(-15*pi/16) == tan(pi/16)
+    assert tan(-14*pi/16) == tan(pi/8)
+    assert tan(-13*pi/16) == tan(3*pi/16)
+    assert tan(-12*pi/16) == 1
+    assert tan(-11*pi/16) == cot(3*pi/16)
+    assert tan(-10*pi/16) == cot(pi/8)
+    assert tan(-9*pi/16) == cot(pi/16)
+    assert tan(-8*pi/16) == zoo
+    assert tan(-7*pi/16) == -cot(pi/16)
+    assert tan(-6*pi/16) == -cot(pi/8)
+    assert tan(-5*pi/16) == -cot(3*pi/16)
+    assert tan(-4*pi/16) == -1
+    assert tan(-3*pi/16) == -tan(3*pi/16)
+    assert tan(-2*pi/16) == -tan(pi/8)
+    assert tan(-1*pi/16) == -tan(pi/16)
+    assert tan(0*pi/16) == 0
+    assert tan(1*pi/16) == tan(pi/16)
+    assert tan(2*pi/16) == tan(pi/8)
+    assert tan(3*pi/16) == tan(3*pi/16)
+    assert tan(4*pi/16) == 1
+    assert tan(5*pi/16) == cot(3*pi/16)
+    assert tan(6*pi/16) == cot(pi/8)
+    assert tan(7*pi/16) == cot(pi/16)
+    assert tan(8*pi/16) == zoo
+    assert tan(9*pi/16) == -cot(pi/16)
+    assert tan(10*pi/16) == -cot(pi/8)
+    assert tan(11*pi/16) == -cot(3*pi/16)
+    assert tan(12*pi/16) == -1
+    assert tan(13*pi/16) == -tan(3*pi/16)
+    assert tan(14*pi/16) == -tan(pi/8)
+    assert tan(15*pi/16) == -tan(pi/16)
+    assert tan(16*pi/16) == 0
     assert tan(pi) == 0
     assert tan(-pi) == 0
     assert tan(2*pi) == 0
@@ -1784,31 +1799,283 @@ def test_tan_case4():
     assert tan(x + 15*pi/8) == -tan(pi/8 - x)
     assert tan(x - pi/8) == -tan(pi/8 - x)
 
-def test_cot():
-    var("x y n")
+
+# Case 1) a == 0 and b == 0
+def test_csc_case1():
+    assert csc(0) == zoo
+
+# Case 2) a != 0 and b == 0
+def test_csc_case2():
+    x, y, n = symbols('x y n')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    #assert csc(r).is_real == True
+
+    assert csc(exp(10)-1) == csc(-1+exp(10))
+    assert sin(S.NaN) == S.NaN
+    # See Issue 1540 for why these two fail:
+    #assert sin(oo*I) == oo*I
+    #assert sin(-oo*I) == -oo*I
+
+    assert csc(x) == csc(x)
+    assert csc(-x) == -csc(x)
+
+    assert csc(-y) == -csc(y)
+
+    assert csc(asin(x)) == 1 / x
+    assert csc(acos(x)) == 1 / sqrt(1 - x**2)
+    assert csc(atan(x)) == sqrt(1 + x**2) / x
+    assert csc(acsc(x)) == x
+    assert csc(asec(x)) == sqrt(1 - 1/x**2)
+    assert csc(acot(x)) == sqrt(1 + 1 / x**2)
+    assert csc(-asin(x)) == -1 / x
+    assert csc(-acos(x)) == -1 / sqrt(1 - x**2)
+    assert csc(-atan(x)) == -sqrt(1 + x**2) / x
+    assert csc(-acsc(x)) == -x
+    assert csc(-asec(x)) == -sqrt(1 - 1/x**2)
+    assert csc(-acot(x)) == -sqrt(1 + 1 / x**2)
+    # Need to implement csch and sech
+    #assert csc(pi*I) == csch(pi)*I
+    #assert csc(-pi*I) == -csch(pi)*I
+
+    assert csc(2**1024 * E) == csc(2**1024 * E)
+    assert csc(-2**1024 * E) == -csc(2**1024 * E)
+
+
+    assert csc(2 + 3*I) == csc(2 + 3*I)
+    x = Symbol('x', real=True)
+    #assert csc(x*I) == csch(x)*I
+
+# Case 3) a == 0 and b != 0
+def test_csc_case3():
+    x, y, n = symbols('x y n')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert csc(k*pi) == zoo
+    assert csc(17*k*pi) == zoo
+
+    #assert csc(k*pi*I) == csch(k*pi)*I
+    assert csc(pi/6) == 2
+    assert csc(pi/4) == sqrt(2)
+    assert csc(pi/3) == 2/sqrt(3)
+    assert csc(pi/2) == 1
+    assert csc(0 + 4*pi) == zoo
+    assert csc(pi/6 + 4*pi) == 2
+    assert csc(pi/4 + 4*pi) == sqrt(2)
+    assert csc(pi/3 + 4*pi) == 2/sqrt(3)
+    assert csc(pi/2 + 4*pi) == 1
+
+    assert csc(0 + 2*pi) == zoo
+    assert csc(pi/6 + 2*pi) == 2
+    assert csc(pi/4 + 2*pi) == sqrt(2)
+    assert csc(pi/3 + 2*pi) == 2/sqrt(3)
+    assert csc(pi/2 + 2*pi) == 1
+    assert csc(3*pi/2) == -1
+    assert csc(5*pi/2) == 1
+    assert csc(1) == csc(1)
+    assert csc(-1) == -csc(1)
+    assert csc(pi) == zoo
+    assert csc(-pi) == zoo
+    assert csc(2*pi) == zoo
+    assert csc(-2*pi) == zoo
+    assert csc(-3*10**73*pi) == zoo
+    assert csc(7*10**103*pi) == zoo
+
+    assert csc(pi/2) == 1
+    assert csc(-pi/2) == -1
+    assert csc(5*pi/2) == 1
+    assert csc(7*pi/2) == -1
+
+    assert csc(pi/3) == 2/sqrt(3)
+    assert csc(-2*pi/3) == -2/sqrt(3)
+    assert csc(pi/4) == 2/sqrt(2)
+    assert csc(-pi/4) == -2/sqrt(2)
+    assert csc(17*pi/4) == 2/sqrt(2)
+    assert csc(-3*pi/4) == -2/sqrt(2)
+
+    assert csc(pi/6) == 2
+    assert csc(-pi/6) == -2
+    assert csc(7*pi/6) == -2
+    assert csc(-5*pi/6) == -2
+
+    assert csc(1*pi/5) == 1/sqrt((5 - sqrt(5)) / 8)
+    assert csc(2*pi/5) == 1/sqrt((5 + sqrt(5)) / 8)
+    assert csc(3*pi/5) == csc(2*pi/5)
+    assert csc(4*pi/5) == csc(1*pi/5)
+    assert csc(6*pi/5) == -csc(1*pi/5)
+    assert csc(8*pi/5) == -csc(2*pi/5)
+
+    assert csc(pi/10) == 1/sin(pi/10)
+    assert csc(3*pi/10) == (sqrt(5)+1)/4
+    assert csc(7*pi/10) == (sqrt(5)+1)/4
+    assert csc(9*pi/10) == (sqrt(5)-1)/4
+    assert csc(13*pi/10) == (-1-sqrt(5))/4
+    assert csc(17*pi/10) == (-1-sqrt(5))/4
+    assert csc(19*pi/10) == (1-sqrt(5))/4
+    assert csc(-pi/10) == (-sqrt(5)+1)/4
+    assert csc(-3*pi/10) == -(sqrt(5)+1)/4
+    assert csc(-7*pi/10) == -(sqrt(5)+1)/4
+    assert csc(-9*pi/10) == (-sqrt(5)+1)/4
+    assert csc(-13*pi/10) == (1+sqrt(5))/4
+    assert csc(-17*pi/10) == (1+sqrt(5))/4
+    assert csc(-19*pi/10) == (-1+sqrt(5))/4
+
+    assert csc(-1273*pi/5) == -csc(2*pi/5)
+
+    assert csc(pi/105) == csc(pi/105)
+    assert csc(-pi/105) == -csc(pi/105)
+
+    assert csc(104*pi/105) == csc(pi/105)
+    assert csc(106*pi/105) == -csc(pi/105)
+
+    assert csc(-104*pi/105) == -csc(pi/105)
+    assert csc(-106*pi/105) == csc(pi/105)
+
+    assert csc(1*pi/9) == csc(pi/9)
+    assert csc(2*pi/9) == csc(2*pi/9)
+    assert csc(3*pi/9) == sqrt(3)/2
+    assert csc(4*pi/9) == cos(pi/18)
+    assert csc(5*pi/9) == cos(pi/18)
+    assert csc(6*pi/9) == sqrt(3)/2
+    assert csc(7*pi/9) == csc(2*pi/9)
+    assert csc(8*pi/9) == csc(pi/9)
+    assert csc(9*pi/9) == 0
+    assert csc(10*pi/9) == -csc(pi/9)
+    assert csc(11*pi/9) == -csc(2*pi/9)
+    assert csc(12*pi/9) == -sqrt(3)/2
+    assert csc(13*pi/9) == -cos(pi/18)
+    assert csc(14*pi/9) == -cos(pi/18)
+    assert csc(15*pi/9) == -sqrt(3)/2
+    assert csc(16*pi/9) == -csc(2*pi/9)
+    assert csc(17*pi/9) == -csc(pi/9)
+    assert csc(18*pi/9) == 0
+
+    assert csc(-1*pi/9) == -csc(pi/9)
+    assert csc(-2*pi/9) == -csc(2*pi/9)
+    assert csc(-3*pi/9) == -sqrt(3)/2
+    assert csc(-4*pi/9) == -cos(pi/18)
+    assert csc(-5*pi/9) == -cos(pi/18)
+    assert csc(-6*pi/9) == -sqrt(3)/2
+    assert csc(-7*pi/9) == -csc(2*pi/9)
+    assert csc(-8*pi/9) == -csc(pi/9)
+    assert csc(-9*pi/9) == 0
+    assert csc(-10*pi/9) == csc(pi/9)
+    assert csc(-11*pi/9) == csc(2*pi/9)
+    assert csc(-12*pi/9) == sqrt(3)/2
+    assert csc(-13*pi/9) == cos(pi/18)
+    assert csc(-14*pi/9) == cos(pi/18)
+    assert csc(-15*pi/9) == sqrt(3)/2
+    assert csc(-16*pi/9) == csc(2*pi/9)
+    assert csc(-17*pi/9) == csc(pi/9)
+    assert csc(-18*pi/9) == 0
+
+# Case 4) a != 0 and b != 0
+def test_csc_case4():
+    x, y, n = symbols('x y n')
+    r = Symbol('r', real=True)
+    k = Symbol('k', integer=True)
+    assert sin(-y + 2*pi) == -sin(y)
+    assert sin(pi - y + 2*pi) == sin(y)
+    assert sin(pi + y + 2*pi) == -sin(y)
+    assert sin(2*pi - y + 2*pi) == -sin(y)
+    assert sin(pi/2 + y + 2*pi) == cos(y)
+    assert sin(pi/2 - y + 2*pi) == cos(y)
+
+    assert sin(-y + 4*pi) == -sin(y)
+    assert sin(pi - y + 4*pi) == sin(y)
+    assert sin(pi + y + 4*pi) == -sin(y)
+    assert sin(2*pi - y + 4*pi) == -sin(y)
+    assert sin(pi/2 + y + 4*pi) == cos(y)
+    assert sin(pi/2 - y + 4*pi) == cos(y)
+
+    assert sin(x - 15*pi/8) == sin(x + pi/8)
+    assert sin(x + 3*pi/8) == cos(pi/8 - x)
+    assert sin(x - 13*pi/8) == sin(x - 13*pi/8)
+    assert sin(x + 5*pi/8) == cos(x + pi/8)
+    assert sin(x - 11*pi/8) == cos(x + pi/8)
+    assert sin(x + 7*pi/8) == sin(pi/8 - x)
+    assert sin(x - 9*pi/8) == sin(pi/8 - x)
+    assert sin(x + 9*pi/8) == -sin(x + pi/8)
+    assert sin(x - 7*pi/8) == -sin(x + pi/8)
+    assert sin(x + 11*pi/8) == -cos(pi/8 - x)
+    assert sin(x - 5*pi/8) == -cos(pi/8 - x)
+    assert sin(x + 13*pi/8) == -cos(x + pi/8)
+    assert sin(x - 3*pi/8) == -cos(x + pi/8)
+    assert sin(x + 15*pi/8) == -sin(pi/8 - x)
+    assert sin(x - pi/8) == -sin(pi/8 - x)
+    assert sin(pi - y) == sin(y)
+    assert sin(pi + y) == -sin(y)
+    assert sin(2*pi - y) == -sin(y)
+    assert sin(pi/2 + y) == cos(y)
+    assert sin(pi/2 - y) == cos(y)
+
+
+# Case 1) a == 0 and b == 0
+def test_cot_case1():
+    assert cot(0) == zoo
+
+# Case 2) a != 0 and b == 0
+def test_cot_case2():
     assert cot(-y) == -cot(y)
-    assert cot(pi - y) == -cot(y)
-    assert cot(pi + y) == cot(y)
-    assert cot(2*pi - y) == -cot(y)
-    assert cot(pi/2 + y) == -tan(y)
-    assert cot(pi/2 - y) == tan(y)
-    #assert cot(0) == 0
+
+# Case 4) a == 0 and b != 0
+def test_cot_case3():
     assert cot(pi/6) == sqrt(3)
     assert cot(pi/4) == 1
     assert cot(pi/3) == 1/sqrt(3)
     assert cot(pi/2) == 0
+    assert cot(pi/6 + pi) == sqrt(3)
+    assert cot(pi/4 + pi) == 1
+    assert cot(pi/3 + pi) == 1/sqrt(3)
+    assert cot(pi/2 + pi) == 0
+    assert cot(-16*pi/16) == zoo
+    assert cot(-15*pi/16) == cot(pi/16)
+    assert cot(-14*pi/16) == cot(pi/8)
+    assert cot(-13*pi/16) == cot(3*pi/16)
+    assert cot(-12*pi/16) == 1
+    assert cot(-11*pi/16) == tan(3*pi/16)
+    assert cot(-10*pi/16) == tan(pi/8)
+    assert cot(-9*pi/16) == tan(pi/16)
+    assert cot(-8*pi/16) == 0
+    assert cot(-7*pi/16) == -tan(pi/16)
+    assert cot(-6*pi/16) == -tan(pi/8)
+    assert cot(-5*pi/16) == -tan(3*pi/16)
+    assert cot(-4*pi/16) == -1
+    assert cot(-3*pi/16) == -cot(3*pi/16)
+    assert cot(-2*pi/16) == -cot(pi/8)
+    assert cot(-1*pi/16) == -cot(pi/16)
+    assert cot(0*pi/16) == zoo
+    assert cot(1*pi/16) == cot(pi/16)
+    assert cot(2*pi/16) == cot(pi/8)
+    assert cot(3*pi/16) == cot(3*pi/16)
+    assert cot(4*pi/16) == 1
+    assert cot(5*pi/16) == tan(3*pi/16)
+    assert cot(6*pi/16) == tan(pi/8)
+    assert cot(7*pi/16) == tan(pi/16)
+    assert cot(8*pi/16) == 0
+    assert cot(9*pi/16) == -tan(pi/16)
+    assert cot(10*pi/16) == -tan(pi/8)
+    assert cot(11*pi/16) == -tan(3*pi/16)
+    assert cot(12*pi/16) == -1
+    assert cot(13*pi/16) == -cot(3*pi/16)
+    assert cot(14*pi/16) == -cot(pi/8)
+    assert cot(15*pi/16) == -cot(pi/16)
+    assert cot(16*pi/16) == zoo
 
+# Case 4) a != 0 and b != 0
+def test_cot_case4():
+    x, y = symbols('x y')
     assert cot(-y + pi) == -cot(y)
     assert cot(pi - y + pi) == -cot(y)
     assert cot(pi + y + pi) == cot(y)
     assert cot(2*pi - y + pi) == -cot(y)
     assert cot(pi/2 + y + pi) == -tan(y)
     assert cot(pi/2 - y + pi) == tan(y)
-    assert cot(pi/6 + pi) == sqrt(3)
-    assert cot(pi/4 + pi) == 1
-    assert cot(pi/3 + pi) == 1/sqrt(3)
-    assert cot(pi/2 + pi) == 0
-
+    assert cot(pi - y) == -cot(y)
+    assert cot(pi + y) == cot(y)
+    assert cot(2*pi - y) == -cot(y)
+    assert cot(pi/2 + y) == -tan(y)
+    assert cot(pi/2 - y) == tan(y)
     assert cot(x - 15*pi/8) == cot(x + pi/8)
     assert cot(x + 3*pi/8) == tan(pi/8 - x)
     assert cot(x - 13*pi/8) == tan(pi/8 - x)
@@ -1825,42 +2092,8 @@ def test_cot():
     assert cot(x + 15*pi/8) == -cot(pi/8 - x)
     assert cot(x - pi/8) == -cot(pi/8 - x)
 
-    assert Cot(-16*pi/16) == zoo
-    assert Cot(-15*pi/16) == Cot(pi/16)
-    assert Cot(-14*pi/16) == Cot(pi/8)
-    assert Cot(-13*pi/16) == Cot(3*pi/16)
-    assert Cot(-12*pi/16) == 1
-    assert Cot(-11*pi/16) == Tan(3*pi/16)
-    assert Cot(-10*pi/16) == Tan(pi/8)
-    assert Cot(-9*pi/16) == Tan(pi/16)
-    assert Cot(-8*pi/16) == 0
-    assert Cot(-7*pi/16) == -Tan(pi/16)
-    assert Cot(-6*pi/16) == -Tan(pi/8)
-    assert Cot(-5*pi/16) == -Tan(3*pi/16)
-    assert Cot(-4*pi/16) == -1
-    assert Cot(-3*pi/16) == -Cot(3*pi/16)
-    assert Cot(-2*pi/16) == -Cot(pi/8)
-    assert Cot(-1*pi/16) == -Cot(pi/16)
-    assert Cot(0*pi/16) == zoo
-    assert Cot(1*pi/16) == Cot(pi/16)
-    assert Cot(2*pi/16) == Cot(pi/8)
-    assert Cot(3*pi/16) == Cot(3*pi/16)
-    assert Cot(4*pi/16) == 1
-    assert Cot(5*pi/16) == Tan(3*pi/16)
-    assert Cot(6*pi/16) == Tan(pi/8)
-    assert Cot(7*pi/16) == Tan(pi/16)
-    assert Cot(8*pi/16) == 0
-    assert Cot(9*pi/16) == -Tan(pi/16)
-    assert Cot(10*pi/16) == -Tan(pi/8)
-    assert Cot(11*pi/16) == -Tan(3*pi/16)
-    assert Cot(12*pi/16) == -1
-    assert Cot(13*pi/16) == -Cot(3*pi/16)
-    assert Cot(14*pi/16) == -Cot(pi/8)
-    assert Cot(15*pi/16) == -Cot(pi/16)
-    assert Cot(16*pi/16) == zoo
-
 def test_symmetry():
-    var("x y n")
+    x, y = symbols('x y')
     assert sin(-x) == -sin(x)
     assert cos(-x) == cos(x)
     assert tan(-x) == -tan(x)
@@ -1895,3 +2128,28 @@ def test_symmetry():
     assert cos(pi/2+x) == -sin(x)
     assert tan(pi/2+x) == -cot(x)
     assert cot(pi/2+x) == -tan(x)
+
+
+
+def test_attributes():
+    x = Symbol('x')
+    assert sin(x).args[:] == (x,)
+    assert sin(x).args[0] != sin
+    assert sin(x).args[0] == x
+
+def test_sincos_rewrite():
+    x = Symbol("x")
+    y = Symbol("y")
+    assert sin(pi/2-x) == cos(x)
+    assert sin(pi-x) == sin(x)
+    assert cos(pi/2-x) == sin(x)
+    assert cos(pi-x) == -cos(x)
+
+    assert sin(-x-y) == -sin(x+y)
+    assert sin(-x-1) == -sin(x+1)
+    assert cos(-x-y) == cos(x+y)
+    assert cos(-x-1) == cos(x+1)
+    assert sin(x-y) == sin(x-y)
+    assert sin(y-x) == sin(y-x)
+    assert cos(y-x) == cos(y-x)
+    assert cos(x-y) == cos(x-y)
