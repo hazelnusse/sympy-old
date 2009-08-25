@@ -1,0 +1,398 @@
+From 66f847f71502ee44920ee61b4c61db13019a15c2 Mon Sep 17 00:00:00 2001
+From: Luke Peterson <hazelnusse@gmail.com>
+Date: Mon, 24 Aug 2009 16:29:35 -0700
+Subject: [PATCH] Implemented block diagonal methods in Matrix class.  Improved doctests.
+
+Implemented:
+
+1)  Matrix.get_diag_blocks() -- returns a list of the smallest square matrices
+from the main diagonal.  If self is degenerately block diagonal, it will return
+a list with one element -- self.
+
+2)  block_diag(matrices) -- creates a block diagonal matrix given a list of
+square matrices.
+
+3)  Matrix.inv() -- added boolean keyword argument "try_block_diag" so that
+inversion of block diagonal matrices makes intelligent use of the block
+diagonal structure.
+
+4)  Added one empty line to all the doctests in sympy/matrices/matrices.py so
+that bin/doctest sympy/matrices/matrices.py no longer fails.
+
+These block diagonal tools significantly improve the speed of block diagonal
+matrix inversion, and provide easy ways to construct block diagonal matrices.
+
+Signed-off-by: Luke Peterson <hazelnusse@gmail.com>
+---
+ sympy/matrices/__init__.py            |    6 +-
+ sympy/matrices/matrices.py            |  108 ++++++++++++++++++++++++++++++++-
+ sympy/matrices/tests/test_matrices.py |   70 +++++++++++++++++++++-
+ 3 files changed, 178 insertions(+), 6 deletions(-)
+
+diff --git a/sympy/matrices/__init__.py b/sympy/matrices/__init__.py
+index 9001eb0..69d0c57 100644
+--- a/sympy/matrices/__init__.py
++++ b/sympy/matrices/__init__.py
+@@ -2,6 +2,6 @@
+ 
+ Includes functions for fast creating matrices like zero, one/eye, random matrix etc.
+ """
+-from matrices import Matrix, SMatrix, zero, zeronm, zeros, one, ones, eye, \
+-     hessian, randMatrix, GramSchmidt, wronskian, casoratian, \
+-     list2numpy, matrix2numpy, DeferredVector
++from matrices import (Matrix, SMatrix, zero, zeronm, zeros, one, ones, eye,
++     hessian, randMatrix, GramSchmidt, wronskian, casoratian,
++     list2numpy, matrix2numpy, DeferredVector, block_diag)
+diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+index ae04a32..f882991 100644
+--- a/sympy/matrices/matrices.py
++++ b/sympy/matrices/matrices.py
+@@ -77,6 +77,7 @@ class Matrix(object):
+         >>> Matrix(2, 2, lambda i,j: (i+1)*j ) #doctest:+NORMALIZE_WHITESPACE
+         [0, 1]
+         [0, 2]
++
+         """
+         if len(args) == 3 and callable(args[2]):
+             operation = args[2]
+@@ -180,6 +181,7 @@ class Matrix(object):
+         [2 + I, 4]
+         >>> m.T == m.transpose()
+         True
++
+         """
+         a = [0]*self.cols*self.lines
+         for i in xrange(self.cols):
+@@ -209,6 +211,7 @@ class Matrix(object):
+         >>> m.H #doctest: +NORMALIZE_WHITESPACE
+         [    1, 3]
+         [2 - I, 4]
++
+         """
+         out = self.T.C
+         return out
+@@ -348,6 +351,7 @@ class Matrix(object):
+         [6, 7, 8]
+         >>> m.tolist()
+         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
++
+         """
+         ret = [0]*self.lines
+         for i in xrange(self.lines):
+@@ -483,7 +487,7 @@ class Matrix(object):
+     def __repr__(self):
+         return StrPrinter.doprint(self)
+ 
+-    def inv(self, method="GE", iszerofunc=_iszero):
++    def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
+         """
+         Calculates the matrix inverse.
+ 
+@@ -493,6 +497,10 @@ class Matrix(object):
+           LU .... inverse_LU()
+           ADJ ... inverse_ADJ()
+ 
++        According to the "try_block_diag" parameter, it will try to form block
++        diagonal matrices using the method get_diag_blocks(), invert these
++        individually, and then reconstruct the full inverse matrix.
++
+         Note, the GE and LU methods may require the matrix to be simplified
+         before it is inverted in order to properly detect zeros during
+         pivoting. In difficult cases a custom zero detection function can
+@@ -500,7 +508,13 @@ class Matrix(object):
+         should return True if its argument is zero.
+ 
+         """
+-        assert self.cols==self.lines
++        assert self.cols==self.rows
++        if try_block_diag:
++            blocks = self.get_diag_blocks()
++            r = []
++            for block in blocks:
++                r.append(block.inv(method=method, iszerofunc=iszerofunc))
++            return block_diag(r)
+         if method == "GE":
+             return self.inverse_GE(iszerofunc=iszerofunc)
+         elif method == "LU":
+@@ -551,6 +565,7 @@ class Matrix(object):
+         [1, 0]
+         [0, 0]
+         [0, 1]
++
+         """
+         for j in range(self.lines-1, -1, -1):
+             del self.mat[i+j*self.cols]
+@@ -567,6 +582,7 @@ class Matrix(object):
+         [0, 1, 2, 3]
+         [1, 2, 3, 4]
+         [2, 3, 4, 5]
++
+         """
+         assert self.lines == rhs.lines
+         newmat = self.zeros((self.lines, self.cols + rhs.cols))
+@@ -586,6 +602,7 @@ class Matrix(object):
+         [1, 2, 3]
+         [2, 3, 4]
+         [3, 4, 5]
++
+         """
+         assert self.cols == bott.cols
+         newmat = self.zeros((self.lines+bott.lines, self.cols))
+@@ -609,6 +626,7 @@ class Matrix(object):
+         [0, 0, 0]
+         [1, 2, 3]
+         [2, 3, 4]
++
+         """
+         if pos is 0:
+             return mti.col_join(self)
+@@ -636,6 +654,7 @@ class Matrix(object):
+         [0, 0, 1, 2]
+         [1, 0, 2, 3]
+         [2, 0, 3, 4]
++
+         """
+         if pos is 0:
+             return mti.row_join(self)
+@@ -670,6 +689,7 @@ class Matrix(object):
+         >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
+         [4, 5]
+         [5, 6]
++
+         """
+         assert isinstance(keys[0], slice) or isinstance(keys[1], slice)
+         rlo, rhi = self.slice2bounds(keys[0], self.lines)
+@@ -718,6 +738,7 @@ class Matrix(object):
+         >>> m.applyfunc(lambda i: 2*i)  #doctest: +NORMALIZE_WHITESPACE
+         [0, 2]
+         [4, 6]
++
+         """
+         assert callable(f)
+         out = Matrix(self.lines,self.cols,map(f,self.mat))
+@@ -742,6 +763,7 @@ class Matrix(object):
+         [1, 1]
+         [1, 1]
+         [1, 1]
++
+         """
+         if self.lines*self.cols != _rows*_cols:
+             print "Invalid reshape parameters %d %d" % (_rows, _cols)
+@@ -764,6 +786,7 @@ class Matrix(object):
+         [ x  ]
+         [  x ]
+         [   x]
++
+         """
+         s="";
+         for i in range(self.lines):
+@@ -934,6 +957,7 @@ class Matrix(object):
+         >>> X.jacobian(Y)
+         [cos(phi), -rho*sin(phi)]
+         [sin(phi),  rho*cos(phi)]
++
+         """
+         if not isinstance(X, Matrix):
+             X = Matrix(X)
+@@ -1432,6 +1456,7 @@ class Matrix(object):
+         [2]
+         [3]
+         [4]
++
+         """
+         return Matrix(self.cols*self.lines, 1, self.transpose().mat)
+ 
+@@ -1453,6 +1478,7 @@ class Matrix(object):
+         [3]
+         >>> m.vech(diagonal=False)
+         [2]
++
+         """
+         c = self.cols
+         if c != self.lines:
+@@ -1474,6 +1500,53 @@ class Matrix(object):
+                     count += 1
+         return v
+ 
++    def get_diag_blocks(self):
++        """Obtains the square sub-matrices on the main diagonal of a square matrix.
++
++        Useful for inverting symbolic matrices or solving systems of
++        linear equations which may be decoupled by having a block diagonal
++        structure.
++
++        Example:
++
++        >>> from sympy import Matrix, symbols
++        >>> x, y, z = symbols('x y z')
++        >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
++        >>> a1, a2, a3 = A.get_diag_blocks()
++        >>> a1
++        [1,    3]
++        [y, z**2]
++        >>> a2
++        [x]
++        >>> a3
++        [0]
++        >>>
++
++        """
++        sub_blocks = []
++        def recurse_sub_blocks(M):
++            i = 1
++            while i <= M.shape[0]:
++                if i == 1:
++                    to_the_right = M[0, i:]
++                    to_the_bottom = M[i:, 0]
++                else:
++                    to_the_right = M[0:i, i:]
++                    to_the_bottom = M[i:, 0:i]
++                if any(to_the_right) or any(to_the_bottom):
++                    i += 1
++                    continue
++                else:
++                    sub_blocks.append(M[0:i, 0:i])
++                    if M.shape == M[0:i, 0:i].shape:
++                        return
++                    else:
++                        recurse_sub_blocks(M[i:, i:])
++                        return
++        recurse_sub_blocks(self)
++        return sub_blocks
++
++
+ def matrix_multiply(A, B):
+     """
+     Matrix product A*B.
+@@ -1494,6 +1567,7 @@ def matrix_multiply(A, B):
+     ...
+     ShapeError
+     >>>
++
+     """
+     # The following implmentation is equivalent, but about 5% slower
+     #ma, na = A.shape
+@@ -1676,6 +1750,36 @@ def casoratian(seqs, n, zero=True):
+ 
+     return Matrix(k, k, f).det()
+ 
++def block_diag(matrices):
++    """
++    Constructs a block diagonal matrix from a list of square matrices.
++
++    Example:
++    >>> from sympy import block_diag, symbols
++    >>> x, y, z = symbols("x y z")
++    >>> a = Matrix([[1, 2], [2, 3]])
++    >>> b = Matrix([[3, x], [y, 3]])
++    >>> block_diag([a, b, b])
++    [1, 2, 0, 0, 0, 0]
++    [2, 3, 0, 0, 0, 0]
++    [0, 0, 3, x, 0, 0]
++    [0, 0, y, 3, 0, 0]
++    [0, 0, 0, 0, 3, x]
++    [0, 0, 0, 0, y, 3]
++
++    """
++    rows = 0
++    for m in matrices:
++        assert m.rows == m.cols, "All matrices must be square."
++        rows += m.rows
++    A = zeros((rows, rows))
++    i = 0
++    for m in matrices:
++        A[i+0:i+m.rows, i+0:i+m.cols] = m
++        i += m.rows
++    return A
++
++
+ class SMatrix(Matrix):
+     """Sparse matrix"""
+ 
+diff --git a/sympy/matrices/tests/test_matrices.py b/sympy/matrices/tests/test_matrices.py
+index 208d671..a97794e 100644
+--- a/sympy/matrices/tests/test_matrices.py
++++ b/sympy/matrices/tests/test_matrices.py
+@@ -1,6 +1,6 @@
+ from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
+         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
+-        integrate, oo, raises, trigsimp, Integer
++        integrate, oo, raises, trigsimp, Integer, block_diag
+ from sympy.matrices.matrices import ShapeError, MatrixError
+ from sympy.printing import srepr
+ from sympy.utilities.pytest import XFAIL
+@@ -1028,3 +1028,71 @@ def test_vech_TypeError():
+     m = Matrix([ [1,3], [2,4] ])
+     raises(TypeError, 'm.vech()')
+ 
++def test_block_diag1():
++    x, y, z = symbols("x y z")
++    a = Matrix([[1, 2], [2, 3]])
++    b = Matrix([[3, x], [y, 3]])
++    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
++    assert block_diag([a, b, b]) == Matrix([
++            [1, 2, 0, 0, 0, 0],
++            [2, 3, 0, 0, 0, 0],
++            [0, 0, 3, x, 0, 0],
++            [0, 0, y, 3, 0, 0],
++            [0, 0, 0, 0, 3, x],
++            [0, 0, 0, 0, y, 3],
++            ])
++    assert block_diag([a, b, c]) == Matrix([
++            [1, 2, 0, 0, 0, 0, 0],
++            [2, 3, 0, 0, 0, 0, 0],
++            [0, 0, 3, x, 0, 0, 0],
++            [0, 0, y, 3, 0, 0, 0],
++            [0, 0, 0, 0, 3, x, 3],
++            [0, 0, 0, 0, y, 3, z],
++            [0, 0, 0, 0, x, y, z],
++            ])
++    assert block_diag([a, c, b]) == Matrix([
++            [1, 2, 0, 0, 0, 0, 0],
++            [2, 3, 0, 0, 0, 0, 0],
++            [0, 0, 3, x, 3, 0, 0],
++            [0, 0, y, 3, z, 0, 0],
++            [0, 0, x, y, z, 0, 0],
++            [0, 0, 0, 0, 0, 3, x],
++            [0, 0, 0, 0, 0, y, 3],
++            ])
++
++def test_get_diag_blocks1():
++    x, y, z = symbols("x y z")
++    a = Matrix([[1, 2], [2, 3]])
++    b = Matrix([[3, x], [y, 3]])
++    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
++    a.get_diag_blocks() == [a]
++    b.get_diag_blocks() == [b]
++    c.get_diag_blocks() == [c]
++
++def test_get_diag_blocks2():
++    x, y, z = symbols("x y z")
++    a = Matrix([[1, 2], [2, 3]])
++    b = Matrix([[3, x], [y, 3]])
++    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
++    assert block_diag([a, b, b]).get_diag_blocks() == [a, b, b]
++    assert block_diag([a, b, c]).get_diag_blocks() == [a, b, c]
++    assert block_diag([a, c, b]).get_diag_blocks() == [a, c, b]
++    assert block_diag([c, c, b]).get_diag_blocks() == [c, c, b]
++
++def test_inv_block():
++    x, y, z = symbols("x y z")
++    a = Matrix([[1, 2], [2, 3]])
++    b = Matrix([[3, x], [y, 3]])
++    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
++    A = block_diag([a, b, b])
++    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), b.inv()])
++    A = block_diag([a, b, c])
++    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), c.inv()])
++    A = block_diag([a, c, b])
++    assert A.inv(try_block_diag=True) == block_diag([a.inv(), c.inv(), b.inv()])
++    A = block_diag([a, a, b, a, c, a])
++    assert A.inv(try_block_diag=True) == block_diag([
++        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv()])
++    assert A.inv(try_block_diag=True, method="ADJ") == block_diag([
++        a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
++        a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ")])
+-- 
+1.6.0.4
+
